@@ -5,11 +5,7 @@ from random import randint, choice
 class Drone:
     tick = 0
     def __init__(self):
-        self.instructionQueue = []
-
-    def follow_instruction():
-        instruction = instructionQueue.pop(0)
-        return instruction
+        self.instructionQueue = ['NORTH', 'NORTH', 'EAST', 'EAST', 'SOUTH', 'SOUTH', 'WEST', 'WEST']
 
     def move(self, context):
         if context.north == '*':
@@ -22,7 +18,8 @@ class Drone:
             return 'WEST'
 
         if self.instructionQueue:
-            self.follow_instruction()
+            instruction = self.instructionQueue.pop(0)
+            return instruction
 
         new = randint(0, 3)
         if new == 0 and context.north in '* ':
