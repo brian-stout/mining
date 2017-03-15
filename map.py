@@ -48,7 +48,7 @@ class Map:
         return sum(m.amt for m in self.mineral) / (self.__x * self.__y)
 
     def __str__(self):
-        return '\n'.join(''.join(row) for row in self.fog)
+        return '\n'.join(''.join(row) for row in reversed(self.fog))
 
     def __getitem__(self, key):
         if self.fog:
@@ -121,13 +121,13 @@ class Map:
 
     def move_to(self, l, d):
         if d == 'NORTH':
-            new_l = (l.x, l.y - 1)
-        elif d == 'SOUTH':
             new_l = (l.x, l.y + 1)
+        elif d == 'SOUTH':
+            new_l = (l.x, l.y - 1)
         elif d == 'EAST':
-            new_l = (l.x - 1, l.y)
-        elif d == 'WEST':
             new_l = (l.x + 1, l.y)
+        elif d == 'WEST':
+            new_l = (l.x - 1, l.y)
         else:
             new_l = (l.x, l.y)
 
