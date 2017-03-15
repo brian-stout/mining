@@ -53,6 +53,7 @@ for _ in range(TICKS):
     for n in maps:
         maps[n].tick()
         print(maps[n], end='\n\n')
+    print(c.ticksLeft)
     sleep(0.5)
     c.ticksLeft -= 1
     zerg.Drone.tick += 1

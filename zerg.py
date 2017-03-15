@@ -36,13 +36,13 @@ class Drone:
 
     def move_to_home(self):
         if self.location.x > 0:
-            return self.move_south()
-        elif self.location.x < 0:
-            return self.move_north()
-        elif self.location.y > 0:
             return self.move_west()
-        elif self.location.y < 0:
+        elif self.location.x < 0:
             return self.move_east()
+        elif self.location.y > 0:
+            return self.move_south()
+        elif self.location.y < 0:
+            return self.move_north()
         else:
             return self.maintain_position()
 
@@ -130,11 +130,10 @@ class Overlord:
         self.maps[map_id] = summary
 
     def action(self):
-        """for zerg in self.zerg.values():
-            distance = self.determine_distance(self.origin, zerg.location)
-            if distance < (self.ticksLeft + 2):
-                self.returningDrones = True
-                zerg.returnMode = True"""
+        if self.ticksLeft < 30:
+            self.returningDrones = True
+            for zerg in self.zerg.values():
+                zerg.returnMode = True
 
         if self.zergsAboard:
             zerg = self.zergsAboard.pop(0)
