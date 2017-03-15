@@ -52,6 +52,6 @@ for _ in range(TICKS):
     for n in maps:
         maps[n].tick()
         print(maps[n], end='\n\n')
-    sleep(2)
+    sleep(0.5)
 
 print(mined)
