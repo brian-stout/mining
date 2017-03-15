@@ -108,6 +108,8 @@ class Overlord:
     def __init__(self, ticks):
         self.maps = {}
         self.zerg = {}
+        self.zergsAboard = []
+        self.zergsDeployed = []
         self.ticksLeft = ticks
         self.origin = Coordinates(0,0)
         self.returningDrones = False
@@ -115,6 +117,9 @@ class Overlord:
         for _ in range(6):
             z = Drone(self)
             self.zerg[id(z)] = z
+
+        for key in self.zerg:
+            self.zergsAboard.append(key)
 
     # Function used to determined the mininum number of changes required to
     #   go from one coordinate to another
@@ -131,11 +136,10 @@ class Overlord:
                 self.returningDrones = True
                 zerg.returnMode = True"""
 
-        for key in self.zerg:
-            return 'DEPLOY {} {}'.format((key), choice(list(self.maps.keys())))
+        if self.zergsAboard:
+            zerg = self.zergsAboard.pop(0)
+            return 'DEPLOY {} {}'.format((zerg), choice(list(self.maps.keys())))
 
-        act = randint(0, 3)
-        if act == 0:
-            return 'RETURN {}'.format(choice(list(self.zerg.keys())))
+        return 'RETURN {}'.format(choice(list(self.zerg.keys())))
 
 
