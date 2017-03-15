@@ -7,7 +7,7 @@ from time import sleep
 
 TICKS = 100
 
-c = zerg.Overlord()
+c = zerg.Overlord(TICKS)
 
 #for n in range(3):
     #m = Map(20, 10)
@@ -54,6 +54,7 @@ for _ in range(TICKS):
         maps[n].tick()
         print(maps[n], end='\n\n')
     sleep(0.5)
+    c.ticksLeft -= 1
     zerg.Drone.tick += 1
 
 print(mined)
