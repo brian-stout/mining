@@ -34,6 +34,7 @@ class Map:
             self[c] = '~'
             self.acid.append(c)
 
+        #Haubrich's fog of war implementation for testing
         self.fog = [['X' for _ in range(X)] for _ in range(Y)]
         c = 0,0
         while self[c] != ' ':

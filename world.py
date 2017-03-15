@@ -47,11 +47,13 @@ for _ in range(TICKS):
     else:
         pass
 
+    #Haubrich's auto player implementation
     os.system("clear") 
     os.system("clear")
     for n in maps:
         maps[n].tick()
         print(maps[n], end='\n\n')
     sleep(0.5)
+    zerg.Drone.tick += 1
 
 print(mined)
