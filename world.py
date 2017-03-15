@@ -2,6 +2,8 @@
 
 from map import Map
 import zerg
+import os
+from time import sleep
 
 TICKS = 100
 
@@ -11,7 +13,7 @@ c = zerg.Overlord()
     #m = Map(20, 10)
     #maps[id(m)] = m
 
-maps = { n: Map(10, 5) for n in range(3) }
+maps = { n: Map(40, 20) for n in range(3) }
 for n in maps:
     c.add_map(n, maps[n].summary())
 
@@ -45,8 +47,11 @@ for _ in range(TICKS):
     else:
         pass
 
+    os.system("clear") 
+    os.system("clear")
     for n in maps:
         maps[n].tick()
-        print(maps[n])
+        print(maps[n], end='\n\n')
+    sleep(2)
 
 print(mined)

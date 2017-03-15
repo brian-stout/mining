@@ -11,6 +11,7 @@ class Map:
     def __init__(self, X, Y):
         self.__x = X
         self.__y = Y
+        self.fog = []
 
         self.data = [[ '#' for _ in range(X) ]]
         for _ in range(Y-2):
@@ -20,15 +21,10 @@ class Map:
             self.data.append(d)
         self.data.append([ '#' for _ in range(X) ])
 
+
         self.mineral = []
         for n in range(1,10):
             self.add_mineral(n)
-
-        c = 0,0
-        while self[c] != ' ':
-            c = randint(1, self.__x - 2), randint(1, self.__y - 2)
-        self[c] = '_'
-        self.landing_zone = c
 
         self.acid = []
         for _ in range(X * Y // 15):
@@ -38,18 +34,29 @@ class Map:
             self[c] = '~'
             self.acid.append(c)
 
+        self.fog = [['X' for _ in range(X)] for _ in range(Y)]
+        c = 0,0
+        while self[c] != ' ':
+            c = randint(1, self.__x - 2), randint(1, self.__y - 2)
+        self[c] = '_'
+        self.landing_zone = c
+
         self.zerg = []
 
     def summary(self):
         return sum(m.amt for m in self.mineral) / (self.__x * self.__y)
 
     def __str__(self):
-        return '\n'.join(''.join(row) for row in self.data)
+        return '\n'.join(''.join(row) for row in self.fog)
 
     def __getitem__(self, key):
+        if self.fog:
+            self.fog[key[1]][key[0]] = self.data[key[1]][key[0]]
         return self.data[key[1]][key[0]]
 
     def __setitem__(self, key, val):
+        if self.fog:
+            self.fog[key[1]][key[0]] = val
         self.data[key[1]][key[0]] = val
 
     def what_is_at(self, key):
