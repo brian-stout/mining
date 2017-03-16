@@ -5,11 +5,11 @@ import zerg
 import os
 from time import sleep
 
-TICKS = 40
+TICKS = 200
 
 c = zerg.Overlord(TICKS)
 
-maps = { n: Map(20, 10) for n in range(3) }
+maps = { n: Map(30, 20) for n in range(3) }
 for n in maps:
     c.add_map(n, maps[n].summary())
 
@@ -53,7 +53,7 @@ for _ in range(TICKS):
         maps[n].tick()
         print(maps[n], end='\n\n')
     print(c.ticksLeft)
-    sleep(0.5)
+    sleep(0.2)
     c.ticksLeft -= 1
     zerg.Drone.tick += 1
 

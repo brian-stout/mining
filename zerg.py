@@ -11,6 +11,7 @@ class Drone:
     tick = 0
     def __init__(self, overlord):
         self.instructionQueue = []
+        # TODO:  Solve the coupling
         self.daddyOverlord = overlord
         self.location = Coordinates(0, 0)
         self.returnMode = False
@@ -73,13 +74,13 @@ class Drone:
             self.location.x = 1
             return self.move_west(context)
 
-        if self.location.x > 0 and context.west in ' _~':
+        if self.location.x > 0 and context.west in ' _~*':
             return self.move_west(context)
-        elif self.location.x < 0 and context.east in ' _~':
+        elif self.location.x < 0 and context.east in ' _~*':
             return self.move_east(context)
-        elif self.location.y > 0 and context.south in ' _~':
+        elif self.location.y > 0 and context.south in ' _~*':
             return self.move_south(context)
-        elif self.location.y < 0 and context.north in ' _~':
+        elif self.location.y < 0 and context.north in ' _~*':
             return self.move_north(context)
         else:
             return self.maintain_position()
