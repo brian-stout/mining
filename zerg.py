@@ -15,34 +15,72 @@ class Drone:
         self.location = Coordinates(0, 0)
         self.returnMode = False
 
-    def move_north(self):
-            self.location.y += 1
-            return 'NORTH'
+    def move_north(self, context):
+            if context.north in '*#Z':
+                return 'NORTH'
+            else:
+                self.location.y += 1
+                return 'NORTH'
 
-    def move_south(self):
-            self.location.y -= 1
-            return 'SOUTH'
+    def move_south(self, context):
+            if context.south in '*#Z':
+                return 'SOUTH'
+            else:
+                self.location.y -= 1
+                return 'SOUTH'
 
-    def move_east(self):
-            self.location.x += 1
-            return 'EAST'
+    def move_east(self, context):
+            if context.east in '*#Z':
+                return 'EAST'
+            else:
+                self.location.x += 1
+                return 'EAST'
 
-    def move_west(self):
-            self.location.x -= 1
-            return 'WEST'
+    def move_west(self, context):
+            if context.west in '*#Z':
+                return 'WEST'
+            else:
+                self.location.x -= 1
+                return 'WEST'
 
     def maintain_position(self):
             return 'CENTER'
 
-    def move_to_home(self):
-        if self.location.x > 0:
-            return self.move_west()
-        elif self.location.x < 0:
-            return self.move_east()
-        elif self.location.y > 0:
-            return self.move_south()
-        elif self.location.y < 0:
-            return self.move_north()
+    def leave_deployment_zone(self, context):
+        if context.north in ' ':
+            return self.move_north(context)
+        elif context.south in ' ':
+            return self.move_south(context)
+        elif context.east in ' ':
+            return self.move_east(context)
+        elif context.west in ' ':
+            return self.move_west(context)
+        else:
+            return False
+
+    def move_to_home(self, context):
+        
+        if context.north == '_':
+            self.location.y = -1
+            return self.move_north(context)
+        elif context.south ==  '_':
+            self.location.y = 1
+            return self.move_south(context)
+        elif context.east == '_':
+            self.location.x = -1
+            return self.move_east(context)
+        elif context.west == '_':
+            self.location.x = 1
+            return self.move_west(context)
+
+        if self.location.x > 0 and context.west in ' _~':
+            return self.move_west(context)
+        elif self.location.x < 0 and context.east in ' _~':
+            return self.move_east(context)
+        elif self.location.y > 0 and context.south in ' _~':
+            return self.move_south(context)
+        elif self.location.y < 0 and context.north in ' _~':
+            return self.move_north(context)
         else:
             return self.maintain_position()
 
@@ -62,34 +100,41 @@ class Drone:
         instruction = self.instructionQueue.pop(-1)
 
         if instruction == 'NORTH':
-            return self.move_north()
+            return self.move_north(context)
         elif instruction == 'SOUTH':
-            return self.move_south()
+            return self.move_south(context)
         elif instruction == 'EAST':
-            return self.move_east()
+            return self.move_east(context)
         elif instruction == 'WEST':
-            return self.move_west()
+            return self.move_west(context)
         else:
             return self.maintain_position()
 
     def random_direction(self, context): 
         new = randint(0, 3)
         if new == 0 and context.north in ' ':
-            return self.move_north()
+            return self.move_north(context)
         elif new == 1 and context.south in ' ':
-            return self.move_south()
+            return self.move_south(context)
         elif new == 2 and context.east in ' ':
-            return self.move_east()
+            return self.move_east(context)
         elif new == 3 and context.west in ' ':
-            return self.move_west()
+            return self.move_west(context)
         else:
             return self.maintain_position() 
 
     def move(self, context):
         if self.returnMode == True:
-            direction = self.move_to_home()
-            if direction:
+            direction = self.move_to_home(context)
+            if direction == 'CENTER':
+                #Calls to Overlord to let it know, it's at deployment area
+                self.daddyOverlord.return_zerg(self)
                 return direction
+            elif direction:
+                return direction
+
+        elif self.location.x == 0 and self.location.y == 0:
+            return self.leave_deployment_zone(context)
 
         direction = self.focus_minerals(context)
         if direction:
@@ -108,8 +153,9 @@ class Overlord:
     def __init__(self, ticks):
         self.maps = {}
         self.zerg = {}
-        self.zergsAboard = []
-        self.zergsDeployed = []
+        self.zergDropList = []
+        self.nextMap = 0
+        self.zergReturnList = []
         self.ticksLeft = ticks
         self.origin = Coordinates(0,0)
         self.returningDrones = False
@@ -119,7 +165,7 @@ class Overlord:
             self.zerg[id(z)] = z
 
         for key in self.zerg:
-            self.zergsAboard.append(key)
+            self.zergDropList.append(key)
 
     # Function used to determined the mininum number of changes required to
     #   go from one coordinate to another
@@ -129,16 +175,38 @@ class Overlord:
     def add_map(self, map_id, summary):
         self.maps[map_id] = summary
 
+    def return_zerg(self, zergObject):
+        zergID = id(zergObject)
+        if zergID in self.zergReturnList:
+            pass
+        else:
+            self.zergReturnList.append(zergID)
+
     def action(self):
-        if self.ticksLeft < 30:
+        if self.ticksLeft < 30 and self.returningDrones == False:
             self.returningDrones = True
             for zerg in self.zerg.values():
                 zerg.returnMode = True
 
-        if self.zergsAboard:
-            zerg = self.zergsAboard.pop(0)
-            return 'DEPLOY {} {}'.format((zerg), choice(list(self.maps.keys())))
+        if self.zergReturnList and self.returningDrones == True:
+            zergID = self.zergReturnList.pop(0)
+            return 'RETURN {}'.format(zergID)
 
-        return 'RETURN {}'.format(choice(list(self.zerg.keys())))
+        elif self.zergDropList:
+            zerg = self.zergDropList.pop(0)
+            mapId = self.nextMap
+            self.nextMap += 1
+            if self.nextMap > 2:
+                self.nextMap = 0
+            return 'DEPLOY {} {}'.format((zerg), mapId)
+
+        else:
+            if self.returningDrones == True:
+                return 'RETURN {}'.format(choice(list(self.zerg.keys())))
+            else:
+                return 'DEPLOY {} {}'.format(choice(list(self.zerg.keys())),
+                    choice(list(self.maps.keys())))
+
+        
 
 

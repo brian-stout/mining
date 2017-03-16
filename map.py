@@ -44,7 +44,7 @@ class Map:
         return sum(m.amt for m in self.mineral) / (self.__x * self.__y)
 
     def __str__(self):
-        return '\n'.join(''.join(row) for row in self.data)
+        return '\n'.join(''.join(row) for row in reversed(self.data))
 
     def __getitem__(self, key):
         return self.data[key[1]][key[0]]
@@ -73,10 +73,10 @@ class Map:
             if z_id == id(z.zerg) and (z.location.x,z.location.y) == self.landing_zone:
                 self[z.location.x, z.location.y] = '_'
                 self.zerg.remove(z)
-                return z.mineral
-        return None
+                return z.mineral, z.hp
+        return None, None
 
-    def add_zerg(self, z):
+    def add_zerg(self, z, health):
         c = self.landing_zone
         if self[c] != '_':
             return False
@@ -84,17 +84,17 @@ class Map:
         l = Location(c[0], c[1])
         self.update_location_adjacent(l)
 
-        ctx = DroneContext(l, z)
+        ctx = DroneContext(l, z, health)
         self[l.x,l.y] = 'Z'
         self.zerg.append(ctx)
 
         return True
 
     def update_location_adjacent(self, l):
-        l.north = self[l.x, l.y-1]
-        l.south = self[l.x, l.y+1]
-        l.east = self[l.x-1, l.y]
-        l.west = self[l.x+1, l.y]
+        l.north = self[l.x, l.y+1]
+        l.south = self[l.x, l.y-1]
+        l.east = self[l.x+1, l.y]
+        l.west = self[l.x-1, l.y]
         return l
 
     def find_mineralcontext_at(self, pos):
@@ -113,13 +113,13 @@ class Map:
 
     def move_to(self, l, d):
         if d == 'NORTH':
-            new_l = (l.x, l.y - 1)
-        elif d == 'SOUTH':
             new_l = (l.x, l.y + 1)
+        elif d == 'SOUTH':
+            new_l = (l.x, l.y - 1)
         elif d == 'EAST':
-            new_l = (l.x - 1, l.y)
-        elif d == 'WEST':
             new_l = (l.x + 1, l.y)
+        elif d == 'WEST':
+            new_l = (l.x - 1, l.y)
         else:
             new_l = (l.x, l.y)
 
@@ -183,8 +183,9 @@ class MineralContext:
         self.amt = amt
 
 class DroneContext:
-    def __init__(self, l, z):
+    def __init__(self, l, z, hp):
         self.location = l
         self.zerg = z
-        self.hp = 40
+#TODO: This should be maintained independent of whichever map they are on
+        self.hp = hp
         self.mineral = 0
