@@ -30,6 +30,7 @@ class Drone:
             return False
 
     def move_to_home(self, context):
+        #TODO: Remove this before Friday
         """
         # Code most likely not needed anymore, but will keep
         #  just in case
@@ -56,7 +57,7 @@ class Drone:
         elif self.location.y < self.home.y and context.north in ' _~*':
             return 'NORTH'
         else:
-            return self.maintain_position()
+            return 'CENTER'
 
     def focus_minerals(self, context):
         if context.north in '*':
@@ -82,7 +83,7 @@ class Drone:
         elif instruction == 'WEST':
             return 'WEST'
         else:
-            return self.maintain_position()
+            return 'CENTER'
 
     def random_direction(self, context): 
         new = randint(0, 3)
@@ -95,7 +96,7 @@ class Drone:
         elif new == 3 and context.west in ' ':
             return 'WEST'
         else:
-            return self.maintain_position() 
+            return 'CENTER'
 
     def move(self, context):
         self.location.x = context.x
