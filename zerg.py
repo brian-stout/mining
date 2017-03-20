@@ -14,34 +14,31 @@ class Drone:
         # TODO:  Solve the coupling
         self.daddyOverlord = overlord
         self.location = Coordinates(0, 0)
+        self.home = Coordinates(0, 0)
         self.returnMode = False
 
     def move_north(self, context):
             if context.north in '*#Z':
                 return 'NORTH'
             else:
-                self.location.y += 1
                 return 'NORTH'
 
     def move_south(self, context):
             if context.south in '*#Z':
                 return 'SOUTH'
             else:
-                self.location.y -= 1
                 return 'SOUTH'
 
     def move_east(self, context):
             if context.east in '*#Z':
                 return 'EAST'
             else:
-                self.location.x += 1
                 return 'EAST'
 
     def move_west(self, context):
             if context.west in '*#Z':
                 return 'WEST'
             else:
-                self.location.x -= 1
                 return 'WEST'
 
     def maintain_position(self):
@@ -62,25 +59,25 @@ class Drone:
     def move_to_home(self, context):
         
         if context.north == '_':
-            self.location.y = -1
+            self.location.y = self.home.y - 1
             return self.move_north(context)
         elif context.south ==  '_':
-            self.location.y = 1
+            self.location.y = self.home.y + 1
             return self.move_south(context)
         elif context.east == '_':
-            self.location.x = -1
+            self.location.x = self.home.x - 1
             return self.move_east(context)
         elif context.west == '_':
-            self.location.x = 1
+            self.location.x = self.home.x + 1
             return self.move_west(context)
 
-        if self.location.x > 0 and context.west in ' _~*':
+        if self.location.x > self.home.x and context.west in ' _~*':
             return self.move_west(context)
-        elif self.location.x < 0 and context.east in ' _~*':
+        elif self.location.x < self.home.x and context.east in ' _~*':
             return self.move_east(context)
-        elif self.location.y > 0 and context.south in ' _~*':
+        elif self.location.y > self.home.y and context.south in ' _~*':
             return self.move_south(context)
-        elif self.location.y < 0 and context.north in ' _~*':
+        elif self.location.y < self.home.y and context.north in ' _~*':
             return self.move_north(context)
         else:
             return self.maintain_position()
@@ -125,6 +122,9 @@ class Drone:
             return self.maintain_position() 
 
     def move(self, context):
+        self.location.x = context.x
+        self.location.y = context.y
+
         if self.returnMode == True:
             direction = self.move_to_home(context)
             if direction == 'CENTER':
@@ -134,7 +134,9 @@ class Drone:
             elif direction:
                 return direction
 
-        elif self.location.x == 0 and self.location.y == 0:
+        elif self.home.x == 0 and self.home.y == 0:
+            self.home.x = context.x
+            self.home.y = context.y
             return self.leave_deployment_zone(context)
 
         direction = self.focus_minerals(context)
