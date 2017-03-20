@@ -17,68 +17,44 @@ class Drone:
         self.home = Coordinates(0, 0)
         self.returnMode = False
 
-    def move_north(self, context):
-            if context.north in '*#Z':
-                return 'NORTH'
-            else:
-                return 'NORTH'
-
-    def move_south(self, context):
-            if context.south in '*#Z':
-                return 'SOUTH'
-            else:
-                return 'SOUTH'
-
-    def move_east(self, context):
-            if context.east in '*#Z':
-                return 'EAST'
-            else:
-                return 'EAST'
-
-    def move_west(self, context):
-            if context.west in '*#Z':
-                return 'WEST'
-            else:
-                return 'WEST'
-
-    def maintain_position(self):
-            return 'CENTER'
-
     def leave_deployment_zone(self, context):
         if context.north in ' ':
-            return self.move_north(context)
+            return 'NORTH'
         elif context.south in ' ':
-            return self.move_south(context)
+            return 'SOUTH'
         elif context.east in ' ':
-            return self.move_east(context)
+            return 'EAST'
         elif context.west in ' ':
-            return self.move_west(context)
+            return 'WEST'
         else:
             return False
 
     def move_to_home(self, context):
-        
+        """
+        # Code most likely not needed anymore, but will keep
+        #  just in case
         if context.north == '_':
             self.location.y = self.home.y - 1
-            return self.move_north(context)
+            return 'NORTH'
         elif context.south ==  '_':
             self.location.y = self.home.y + 1
-            return self.move_south(context)
+            return 'SOUTH'
         elif context.east == '_':
             self.location.x = self.home.x - 1
-            return self.move_east(context)
+            return 'EAST'
         elif context.west == '_':
             self.location.x = self.home.x + 1
-            return self.move_west(context)
+            return 'WEST'
+        """
 
         if self.location.x > self.home.x and context.west in ' _~*':
-            return self.move_west(context)
+            return 'WEST'
         elif self.location.x < self.home.x and context.east in ' _~*':
-            return self.move_east(context)
+            return 'EAST'
         elif self.location.y > self.home.y and context.south in ' _~*':
-            return self.move_south(context)
+            return 'SOUTH'
         elif self.location.y < self.home.y and context.north in ' _~*':
-            return self.move_north(context)
+            return 'NORTH'
         else:
             return self.maintain_position()
 
@@ -98,26 +74,26 @@ class Drone:
         instruction = self.instructionQueue.pop(-1)
 
         if instruction == 'NORTH':
-            return self.move_north(context)
+            return 'NORTH'
         elif instruction == 'SOUTH':
-            return self.move_south(context)
+            return 'SOUTH'
         elif instruction == 'EAST':
-            return self.move_east(context)
+            return 'EAST'
         elif instruction == 'WEST':
-            return self.move_west(context)
+            return 'WEST'
         else:
             return self.maintain_position()
 
     def random_direction(self, context): 
         new = randint(0, 3)
         if new == 0 and context.north in ' ':
-            return self.move_north(context)
+            return 'NORTH'
         elif new == 1 and context.south in ' ':
-            return self.move_south(context)
+            return 'SOUTH'
         elif new == 2 and context.east in ' ':
-            return self.move_east(context)
+            return 'EAST'
         elif new == 3 and context.west in ' ':
-            return self.move_west(context)
+            return 'WEST'
         else:
             return self.maintain_position() 
 
