@@ -7,11 +7,15 @@ class Coordinates:
         self.x = x
         self.y = y
 
+class ScoutMap:
+    def __init__(self, maxX, maxY):
+        self.theMap = [list() for maxX in range(maxY)]
+
 class Drone:
     tick = 0
     def __init__(self, overlord):
         self.instructionQueue = []
-        # TODO:  Solve the coupling
+        self.mapId = 0
         self.daddyOverlord = overlord
         self.location = Coordinates(0, 0)
         self.home = Coordinates(0, 0)
@@ -30,24 +34,6 @@ class Drone:
             return False
 
     def move_to_home(self, context):
-        #TODO: Remove this before Friday
-        """
-        # Code most likely not needed anymore, but will keep
-        #  just in case
-        if context.north == '_':
-            self.location.y = self.home.y - 1
-            return 'NORTH'
-        elif context.south ==  '_':
-            self.location.y = self.home.y + 1
-            return 'SOUTH'
-        elif context.east == '_':
-            self.location.x = self.home.x - 1
-            return 'EAST'
-        elif context.west == '_':
-            self.location.x = self.home.x + 1
-            return 'WEST'
-        """
-
         if self.location.x > self.home.x and context.west in ' _~*':
             return 'WEST'
         elif self.location.x < self.home.x and context.east in ' _~*':
@@ -132,6 +118,7 @@ class Drone:
 class Overlord:
     def __init__(self, ticks):
         self.maps = {}
+        self.scoutedMap = []
         self.zerg = {}
         self.zergDropList = []
         self.nextMap = 0
@@ -140,9 +127,12 @@ class Overlord:
         self.origin = Coordinates(0,0)
         self.returningDrones = False
 
-        for _ in range(6):
+        for number in range(6):
             z = Drone(self)
             self.zerg[id(z)] = z
+
+        for number in range(3):
+           self.scoutedMap.append(None) 
 
         for key in self.zerg:
             self.zergDropList.append(key)
@@ -162,6 +152,10 @@ class Overlord:
         else:
             self.zergReturnList.append(zergID)
 
+    def create_map(self, mapId, maxX, maxY):
+        m = ScoutMap(maxX, maxY) 
+        self.scoutedMap[mapId] = m       
+
     def action(self):
         if self.ticksLeft < 30 and self.returningDrones == False:
             self.returningDrones = True
@@ -178,6 +172,7 @@ class Overlord:
             self.nextMap += 1
             if self.nextMap > 2:
                 self.nextMap = 0
+            self.zerg[zerg].mapId = mapId
             return 'DEPLOY {} {}'.format((zerg), mapId)
 
         else:

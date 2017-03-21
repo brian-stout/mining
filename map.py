@@ -139,10 +139,15 @@ class Map:
             z = self.find_zergcontext_at( (l.x, l.y) )
             z.hp -= 1
         elif self[new_l] == '*':
-            z = self.find_zergcontext_at( (l.x, l.y) )
-            z.mineral += 1
             m = self.find_mineralcontext_at( new_l )
-            m.amt -= 1
+            if m.amt > 0:
+                z = self.find_zergcontext_at( (l.x, l.y) )
+                z.mineral += 1
+                m.amt -= 1
+                if m.amt <= 0:
+                    self[m.location.x, m.location.y] = ' '
+                    self.update_tile(m.location.x, m.location.y)
+                    self.mineral.remove(m)
         else:
             raise Exception('UNKNOWN TERRAIN')
 
@@ -154,6 +159,8 @@ class Map:
 
 
     def tick(self):
+        # TODO: This might be unecessary now that the minerals
+        # are removed upon mining.
         for m in self.mineral:
             if m.amt <= 0:
                 self[m.location.x, m.location.y] = ' '
@@ -168,7 +175,6 @@ class Map:
                 self.zerg.remove(z)
         for z in self.zerg:
             self.update_location_adjacent(z.location)
-        for z in self.zerg:
             pos = z.location.x, z.location.y
 
             d = z.zerg.move(z.location)
