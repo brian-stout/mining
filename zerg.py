@@ -7,16 +7,12 @@ class Coordinates:
         self.x = x
         self.y = y
 
-class ScoutMap:
-    def __init__(self, maxX, maxY):
-        self.theMap = [list() for maxX in range(maxY)]
-
 class Drone:
     tick = 0
     def __init__(self, overlord):
         self.instructionQueue = []
         self.mapId = 0
-        self.daddyOverlord = overlord
+        self.overlord = overlord
         self.location = Coordinates(0, 0)
         self.home = Coordinates(0, 0)
         self.returnMode = False
@@ -71,6 +67,7 @@ class Drone:
         else:
             return 'CENTER'
 
+
     def random_direction(self, context): 
         new = randint(0, 3)
         if new == 0 and context.north in ' ':
@@ -84,6 +81,12 @@ class Drone:
         else:
             return 'CENTER'
 
+    def update_map(self, context):
+        if self.overlord.scoutedMap[self.mapId]:
+            self.overlord.update_map(self.mapId, context)
+        else:
+            self.overlord.create_map(self.mapId, context)
+
     def move(self, context):
         self.location.x = context.x
         self.location.y = context.y
@@ -92,7 +95,7 @@ class Drone:
             direction = self.move_to_home(context)
             if direction == 'CENTER':
                 #Calls to Overlord to let it know, it's at deployment area
-                self.daddyOverlord.return_zerg(self)
+                self.overlord.return_zerg(self)
                 return direction
             elif direction:
                 return direction
@@ -118,7 +121,6 @@ class Drone:
 class Overlord:
     def __init__(self, ticks):
         self.maps = {}
-        self.scoutedMap = []
         self.zerg = {}
         self.zergDropList = []
         self.nextMap = 0
@@ -130,9 +132,6 @@ class Overlord:
         for number in range(6):
             z = Drone(self)
             self.zerg[id(z)] = z
-
-        for number in range(3):
-           self.scoutedMap.append(None) 
 
         for key in self.zerg:
             self.zergDropList.append(key)
@@ -152,9 +151,15 @@ class Overlord:
         else:
             self.zergReturnList.append(zergID)
 
-    def create_map(self, mapId, maxX, maxY):
-        m = ScoutMap(maxX, maxY) 
-        self.scoutedMap[mapId] = m       
+
+    def update_map(self, mapId, context):
+        m = self.scoutedMap[mapId]
+        
+        if m.dataAssigned == True:
+            m.update_map(context)
+        else:
+            print("DEBUG: ASSIGNING DATA TO " + str(mapId))
+            m.data_assignment(context)   
 
     def action(self):
         if self.ticksLeft < 30 and self.returningDrones == False:
