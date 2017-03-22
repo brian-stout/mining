@@ -57,4 +57,4 @@ for _ in range(TICKS):
     c.ticksLeft -= 1
     zerg.Drone.tick += 1
 
-#print(mined)
+print(mined)

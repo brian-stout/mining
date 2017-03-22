@@ -1,0 +1,19 @@
+#TODO:
+
+1. Trace the map at the start
+    o   Find the first wall, note the location, go clock wise
+    o   Go to the bottom first wall, note the location, go counter clock wise
+    o   Finished tracing when the first drone gets to the second location, second drone
+            gets to the first location
+2. Create a graph
+    o   Walls should terminate the node, so the program can determine if a graph is open
+            (still undiscovered nodes,) or closed (completely discovered)
+3. After a Drone's bulk scouting procedures, it should automatically seek to close the graph
+
+4. After a map is complelty mined, a drone should go to another map and help there
+
+EXTRA STUFF
+5. Have a drone keep track of HP and avoid acid pools if it'll kill them when returning
+        home.
+
+6.

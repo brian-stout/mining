@@ -1,5 +1,5 @@
 #!/usr/local/bin/python
-
+from graph import Vertex, Graph
 from random import randint, choice
 
 class Coordinates:
@@ -16,6 +16,8 @@ class Drone:
         self.location = Coordinates(0, 0)
         self.home = Coordinates(0, 0)
         self.returnMode = False
+        self.HP = 20
+        self.mineralsMined = 0
 
     def leave_deployment_zone(self, context):
         if context.north in ' ':
@@ -43,12 +45,16 @@ class Drone:
 
     def focus_minerals(self, context):
         if context.north in '*':
+            self.mineralsMined += 1
             return 'NORTH'
         elif context.south in '*':
+            self.mineralsMined += 1
             return 'SOUTH'
         elif context.east in '*':
+            self.mineralsMined += 1
             return 'EAST'
         elif context.west in '*':
+            self.mineralsMined += 1
             return 'WEST'
         else:
             return False 
@@ -81,21 +87,32 @@ class Drone:
         else:
             return 'CENTER'
 
-    def update_map(self, context):
-        if self.overlord.scoutedMap[self.mapId]:
-            self.overlord.update_map(self.mapId, context)
-        else:
-            self.overlord.create_map(self.mapId, context)
+    def update_graph(self, context):
+        x = context.x
+        y = context.y
+        #North update
+        self.graph.addEdge((x, y), (x, y+1), context.north )
+        #South update
+        self.graph.addEdge((x, y), (x, y-1), context.south )
+        #East update
+        self.graph.addEdge((x, y), (x+1, y), context.east )
+        #West update
+        self.graph.addEdge((x, y), (x-1, y), context.west )
 
     def move(self, context):
         self.location.x = context.x
         self.location.y = context.y
+
+        self.update_graph(context)
 
         if self.returnMode == True:
             direction = self.move_to_home(context)
             if direction == 'CENTER':
                 #Calls to Overlord to let it know, it's at deployment area
                 self.overlord.return_zerg(self)
+                #TODO: Make it a Overlord method, when the overlord actually picks
+                #       the drone up
+                self.mineralsMined = 0
                 return direction
             elif direction:
                 return direction
@@ -122,6 +139,7 @@ class Overlord:
     def __init__(self, ticks):
         self.maps = {}
         self.zerg = {}
+        self.graphs = {}
         self.zergDropList = []
         self.nextMap = 0
         self.zergReturnList = []
@@ -150,17 +168,7 @@ class Overlord:
             pass
         else:
             self.zergReturnList.append(zergID)
-
-
-    def update_map(self, mapId, context):
-        m = self.scoutedMap[mapId]
-        
-        if m.dataAssigned == True:
-            m.update_map(context)
-        else:
-            print("DEBUG: ASSIGNING DATA TO " + str(mapId))
-            m.data_assignment(context)   
-
+ 
     def action(self):
         if self.ticksLeft < 30 and self.returningDrones == False:
             self.returningDrones = True
@@ -178,6 +186,13 @@ class Overlord:
             if self.nextMap > 2:
                 self.nextMap = 0
             self.zerg[zerg].mapId = mapId
+            # Creating graph
+            graph = self.graphs.get(mapId, None)
+            if graph:
+                self.zerg[zerg].graph = graph
+            else:
+                self.graphs[mapId] = Graph()
+                self.zerg[zerg].graph = self.graphs[mapId]
             return 'DEPLOY {} {}'.format((zerg), mapId)
 
         else:
