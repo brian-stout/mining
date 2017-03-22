@@ -86,9 +86,9 @@ class Graph:
 
     def __str__(self):
         returnString = ''
-        for y in reversed(range(self.highestY + 1)):
+        for y in reversed(range(self.highestY)):
             line = ''
-            for x in range(self.highestX + 1):
+            for x in range(self.highestX):
                 vertex = self.vertList.get((x, y), None)
                 if vertex:
                     line += vertex.symbol

@@ -1,11 +1,7 @@
 #!/usr/local/bin/python
 from graph import Vertex, Graph
+from astar import *
 from random import randint, choice
-
-class Coordinates:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
 
 class Drone:
     tick = 0
@@ -13,11 +9,12 @@ class Drone:
         self.instructionQueue = []
         self.mapId = 0
         self.overlord = overlord
-        self.location = Coordinates(0, 0)
-        self.home = Coordinates(0, 0)
+        self.location = (0, 0)
+        self.home = (0, 0)
         self.returnMode = False
         self.HP = 20
         self.mineralsMined = 0
+        self.foo = False
 
     def leave_deployment_zone(self, context):
         if context.north in ' ':
@@ -32,13 +29,13 @@ class Drone:
             return False
 
     def move_to_home(self, context):
-        if self.location.x > self.home.x and context.west in ' _~*':
+        if self.location[0] > self.home[0] and context.west in ' _~*':
             return 'WEST'
-        elif self.location.x < self.home.x and context.east in ' _~*':
+        elif self.location[0] < self.home[0] and context.east in ' _~*':
             return 'EAST'
-        elif self.location.y > self.home.y and context.south in ' _~*':
+        elif self.location[1] > self.home[1] and context.south in ' _~*':
             return 'SOUTH'
-        elif self.location.y < self.home.y and context.north in ' _~*':
+        elif self.location[1] < self.home[1] and context.north in ' _~*':
             return 'NORTH'
         else:
             return 'CENTER'
@@ -100,12 +97,18 @@ class Drone:
         self.graph.addEdge((x, y), (x-1, y), context.west )
 
     def move(self, context):
-        self.location.x = context.x
-        self.location.y = context.y
-
         self.update_graph(context)
 
+        self.location = (context.x, context.y)
+
         if self.returnMode == True:
+            if self.foo == False:
+                result = a_star_search(self.overlord.graphs[self.mapId], self.location, self.home)
+                print(self.location, self.home)
+                print(result)
+                input()
+                self.foo == True
+
             direction = self.move_to_home(context)
             if direction == 'CENTER':
                 #Calls to Overlord to let it know, it's at deployment area
@@ -117,9 +120,8 @@ class Drone:
             elif direction:
                 return direction
 
-        elif self.home.x == 0 and self.home.y == 0:
-            self.home.x = context.x
-            self.home.y = context.y
+        elif self.home[0] == 0 and self.home[1] == 0:
+            self.home = (context.x, context.y)
             return self.leave_deployment_zone(context)
 
         direction = self.focus_minerals(context)
@@ -144,7 +146,6 @@ class Overlord:
         self.nextMap = 0
         self.zergReturnList = []
         self.ticksLeft = ticks
-        self.origin = Coordinates(0,0)
         self.returningDrones = False
 
         for number in range(6):
@@ -177,6 +178,9 @@ class Overlord:
             self.returningDrones = True
             for zerg in self.zerg.values():
                 zerg.returnMode = True
+
+            graph = self.graphs[0]
+            drone = self.zerg[choice(list(self.zerg.keys()))]
 
         if self.zergReturnList and self.returningDrones == True:
             zergID = self.zergReturnList.pop(0)

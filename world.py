@@ -4,8 +4,10 @@ from map import Map
 import zerg
 import os
 from time import sleep
+import astar
+import graph
 
-TICKS = 200
+TICKS = 50
 
 c = zerg.Overlord(TICKS)
 
@@ -54,12 +56,14 @@ for _ in range(TICKS):
         graph = c.get_graph(n)
         if graph:
             print(str(graph.highestX) + " : " + str(graph.highestY))
+            #graph.print_edge_data()
             print(graph)
         print(maps[n], end='\n\n')
 
     print(c.ticksLeft)
-    sleep(0.2)
+    sleep(0.1)
     c.ticksLeft -= 1
     zerg.Drone.tick += 1
+
 
 print(mined)
