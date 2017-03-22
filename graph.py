@@ -73,5 +73,29 @@ class Graph:
     def getVertices(self):
         return self.vertList.keys()
 
+    def print_edge_data(self):
+        if self.vertList:
+            for v in self:
+                for w in v.getConnections():
+                    formatS = "(%s%s, %s%s)"
+                    print( formatS % (v.getId(), v.symbol, w.getId(), w.symbol))
+        print()
+
     def __iter__(self):
         return iter(self.vertList.values())
+
+    def __str__(self):
+        returnString = ''
+        for y in reversed(range(self.highestY + 1)):
+            line = ''
+            for x in range(self.highestX + 1):
+                vertex = self.vertList.get((x, y), None)
+                if vertex:
+                    line += vertex.symbol
+                else:
+                    line += 'X'
+            line += '\n'
+            returnString += line
+        return returnString
+                
+        

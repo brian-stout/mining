@@ -16,4 +16,6 @@ EXTRA STUFF
 5. Have a drone keep track of HP and avoid acid pools if it'll kill them when returning
         home.
 
-6.
+6. Printing out the graph
+    o   Loop through all the Y and X coordinates from the graph
+    o   Print out X if there is nothing there

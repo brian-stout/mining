@@ -51,7 +51,12 @@ for _ in range(TICKS):
     os.system("clear")
     for n in maps:
         maps[n].tick()
+        graph = c.get_graph(n)
+        if graph:
+            print(str(graph.highestX) + " : " + str(graph.highestY))
+            print(graph)
         print(maps[n], end='\n\n')
+
     print(c.ticksLeft)
     sleep(0.2)
     c.ticksLeft -= 1

@@ -168,6 +168,9 @@ class Overlord:
             pass
         else:
             self.zergReturnList.append(zergID)
+
+    def get_graph(self, mapId):
+        return self.graphs.get(mapId, None)
  
     def action(self):
         if self.ticksLeft < 30 and self.returningDrones == False:
