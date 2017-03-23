@@ -65,17 +65,28 @@ class Drone:
         else:
             return False
 
+    def purge_instruction(self):
+        self.instructionQueue = []
+
     def add_instruction_set(self, instructionList):
-        self.instructionQueue.insert(0, instructionList)
-        # Flatten list
-        self.instructionQueue = [y for x in self.instructionQueue for y in x]
+        for instruction in reversed(instructionList):
+            self.instructionQueue.insert(0, instruction)
     
     def follow_instruction(self, context):
         if self.location == self.instructionQueue[0]:
             self.instructionQueue.pop(0)
+        
+        if self.instructionQueue:
+            instruction = self.instructionQueue[0]
+            vertex = self.graph.vertList[instruction]
+        else:
+            return 'CENTER'
+        if vertex.symbol in '#~Z':
+            self.purge_instruction()
+            return 'CENTER'
 
         if self.instructionQueue:
-            direction = self.move_to_point(context, self.instructionQueue[0])
+            direction = self.move_to_point(context, instruction)
             if direction == 'NORTH':
                 return 'NORTH'
             elif direction == 'SOUTH':
@@ -117,7 +128,7 @@ class Drone:
         #West update
         self.graph.addEdge((x, y), (x-1, y), context.west )
 
-    def seek_unvisited(self, context):
+    def uncover_neighbor(self, context):
         x = context.x
         y = context.y
         if self.graph.vertList[(x,y+1)].visited == False:
@@ -136,31 +147,43 @@ class Drone:
     def request_route(self, start, finish):
         self.overlord.generate_route(self, start, finish)
 
+    def return_home(self, context):
+        #route = a_star_search(self.graph, self.location, self.home)
+        #print(route)
+        #input()
+        if self.location == self.home:
+            #Calls to Overlord to let it know, it's at deployment area
+            self.overlord.return_zerg(self)
+            #TODO: Make it a Overlord method, when the overlord actually picks
+            #       the drone up
+            self.mineralsMined = 0
+            return 'CENTER'        
 
+        if self.instructionQueue:
+            direction = self.follow_instruction(context)
+        else:
+            self.request_route(self.location, self.home)
+            direction = self.follow_instruction(context)
+
+        return direction
+
+    def visit_unvisited(self, context):
+        if self.instructionQueue:
+            direction = self.follow_instruction(context)
+        else:
+            self.overlord.return_unvisited(self)
+            direction = self.follow_instruction(context)
+
+        return direction
+        
     def move(self, context):
         self.update_graph(context)
 
         self.location = (context.x, context.y)
 
         if self.returnMode == True:
-            #route = a_star_search(self.graph, self.location, self.home)
-            #print(route)
-            #input()
-
-            if self.instructionQueue:
-                direction = self.follow_instruction(context)
-            else:
-                self.request_route(self.location, self.home)
-                direction = self.follow_instruction(context)
-
-            if direction == 'CENTER':
-                #Calls to Overlord to let it know, it's at deployment area
-                self.overlord.return_zerg(self)
-                #TODO: Make it a Overlord method, when the overlord actually picks
-                #       the drone up
-                self.mineralsMined = 0
-                return direction
-            elif direction:
+            direction = self.return_home(context)
+            if direction:
                 return direction
 
         elif self.home[0] == 0 and self.home[1] == 0:
@@ -171,18 +194,17 @@ class Drone:
         if direction:
             return direction
 
-        if self.instructionQueue:
-            direction = self.follow_instruction(context)
-            if direction:
-                return direction
+        direction = self.uncover_neighbor(context)
+        if direction:
+            return direction
 
-        direction = self.seek_unvisited(context)
+        direction = self.visit_unvisited(context)
         if direction:
             return direction
 
         direction = self.random_direction(context)
         if direction and self.returnMode == False:
-            return direction
+            return 'CENTER'
 
         return 'CENTER'
 
@@ -209,7 +231,7 @@ class Overlord:
     # Function used to determined the mininum number of changes required to
     #   go from one coordinate to another
     def determine_distance(self, pair1, pair2):
-        return abs(pair1.x - pair2.x) + abs(pair1.y - pair2.y)
+        return abs(pair1[0] - pair2[0]) + abs(pair1[1] - pair2[1])
 
     def add_map(self, map_id, summary):
         self.maps[map_id] = summary
@@ -224,14 +246,25 @@ class Overlord:
     def get_graph(self, mapId):
         return self.graphs.get(mapId, None)
 
+    def return_unvisited(self, drone):
+        goal = first_unvisited(drone.graph, drone.location)
+        drone.graph.vertList[goal].visited = True
+        route = a_star_search(drone.graph, drone.location, goal)
+        drone.purge_instruction()
+        drone.add_instruction_set(route)
+
     def generate_route(self, drone, location, goal):
         route = a_star_search(drone.graph, location, goal)
+        drone.purge_instruction()
         drone.add_instruction_set(route)
-        
-            
-        
- 
+
+    def check_zerg_distance(self):
+        pass
+
     def action(self):
+        self.ticksLeft -= 1
+
+        self.check_zerg_distance()
         if self.ticksLeft < 30 and self.returningDrones == False:
             self.returningDrones = True
             for zerg in self.zerg.values():

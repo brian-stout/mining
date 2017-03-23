@@ -62,8 +62,6 @@ for _ in range(TICKS):
 
     print(c.ticksLeft)
     sleep(0.2)
-    c.ticksLeft -= 1
-    zerg.Drone.tick += 1
 
 
 print(mined)

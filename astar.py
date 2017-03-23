@@ -55,7 +55,7 @@ def a_star_search(graph, start, goal):
             next = next.id
             weight = 1
             if graph.vertList[current].symbol == '~':
-                weight = 10
+                weight = 9999
             if graph.vertList[current].symbol in '#Z':
                 weight = 9999
             new_cost = cost_so_far[current] + weight
@@ -75,3 +75,19 @@ def a_star_search(graph, start, goal):
 
     path.pop(0)
     return path
+
+def first_unvisited(graph, start):
+    queue = PriorityQueue()
+    queue.put(start, 0)
+    visited = {}
+    visited[start] = True
+
+    while not queue.empty():
+        current = queue.get()
+        for next in graph.vertList[current].connectedTo:
+            next = next.id
+            if graph.vertList[next].visited == False:
+                return next
+            if next not in visited:
+                queue.put(next, 0)
+                visited[next] = True
