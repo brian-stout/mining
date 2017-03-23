@@ -23,7 +23,7 @@ class Drone:
         self.returnMode = False
         self.HP = 20
         self.mineralsMined = 0
-        self.foo = False
+        self.graph = None
 
     def leave_deployment_zone(self, context):
         if context.north in ' ':
@@ -37,14 +37,14 @@ class Drone:
         else:
             return False
 
-    def move_to_home(self, context):
-        if self.location[0] > self.home[0] and context.west in ' _~*':
+    def move_to_point(self, context, point):
+        if self.location[0] > point[0] and context.west in ' _~*':
             return 'WEST'
-        elif self.location[0] < self.home[0] and context.east in ' _~*':
+        elif self.location[0] < point[0] and context.east in ' _~*':
             return 'EAST'
-        elif self.location[1] > self.home[1] and context.south in ' _~*':
+        elif self.location[1] > point[1] and context.south in ' _~*':
             return 'SOUTH'
-        elif self.location[1] < self.home[1] and context.north in ' _~*':
+        elif self.location[1] < point[1] and context.north in ' _~*':
             return 'NORTH'
         else:
             return 'CENTER'
@@ -94,6 +94,8 @@ class Drone:
             return 'CENTER'
 
     def update_graph(self, context):
+        #TODO:  Just pass it the context, and have it create vertexes that have
+        #           not been visisted
         x = context.x
         y = context.y
         #North update
@@ -105,13 +107,33 @@ class Drone:
         #West update
         self.graph.addEdge((x, y), (x-1, y), context.west )
 
+    def seek_unvisited(self, context):
+        x = context.x
+        y = context.y
+        if self.graph.vertList[(x,y+1)].visited == False:
+            if context.north == ' ':
+                return 'NORTH'
+        if self.graph.vertList[(x,y-1)].visited == False:
+            if context.south == ' ':
+                return 'SOUTH'
+        if self.graph.vertList[(x+1, y)].visited == False:
+            if context.east == ' ':
+                return 'EAST'
+        if self.graph.vertList[(x-1, y)].visited == False:
+            if context.west == ' ':
+                return 'WEST'
+
     def move(self, context):
         self.update_graph(context)
 
         self.location = (context.x, context.y)
 
         if self.returnMode == True:
-            direction = self.move_to_home(context)
+            #route = a_star_search(self.graph, self.location, self.home)
+            #print(route)
+            #input()
+
+            direction = self.move_to_point(context, self.home)
             if direction == 'CENTER':
                 #Calls to Overlord to let it know, it's at deployment area
                 self.overlord.return_zerg(self)
@@ -135,9 +157,18 @@ class Drone:
             if direction:
                 return direction
 
-        direction = self.random_direction(context)
+        direction = self.seek_unvisited(context)
         if direction:
             return direction
+
+        
+        direction = self.random_direction(context)
+        if direction and self.returnMode == False:
+            return direction
+
+        return 'CENTER'
+
+
 
 class Overlord:
     def __init__(self, ticks):
@@ -180,9 +211,6 @@ class Overlord:
             self.returningDrones = True
             for zerg in self.zerg.values():
                 zerg.returnMode = True
-
-            graph = self.graphs[0]
-            drone = self.zerg[choice(list(self.zerg.keys()))]
 
         if self.zergReturnList and self.returningDrones == True:
             zergID = self.zergReturnList.pop(0)

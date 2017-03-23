@@ -7,7 +7,7 @@ from time import sleep
 import astar
 import graph
 
-TICKS = 50
+TICKS = 200
 
 c = zerg.Overlord(TICKS)
 

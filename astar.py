@@ -48,6 +48,9 @@ def a_star_search(graph, start, goal):
         if current == goal:
             break
 
+        #TODO: Automatically generate neighbors so it'll create the straightest path
+        #       If one of the generated neighbors turns out to be an obstacle
+        #       the drone will just call for another path with the new information
         for next in graph.vertList[current].connectedTo:
             next = next.id
             weight = 1
@@ -70,4 +73,5 @@ def a_star_search(graph, start, goal):
     path.append(start) # optional
     path.reverse() # optional
 
+    path.pop(0)
     return path

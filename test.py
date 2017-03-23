@@ -91,7 +91,7 @@ if __name__ == '__main__':
     g.add_edge((0, 1), (2, 2), 2)
     g.add_edge((1, 1), (2, 2), 1.5)
  
-    print( shortest_path(g, (0, 0), (2, 2), sldist) == [(0, 0), (1, 1), (2, 2)])
+    print( shortest_path(g, (0, 0), (2, 2), sldist) == [(0, 0), (1, 1), (2, 2)]
  
     g.distances[((0, 0), (1, 1))] = 2
     g.distances[((1, 1), (0, 0))] = 2

@@ -1,10 +1,13 @@
 #Code modified from http://interactivepython.org/courselib/static/pythonds/Graphs/Implementation.html
 
+from astar import *
+
 class Vertex:
     def __init__(self, key, symbol):
         self.id = key
         self.symbol = symbol
         self.connectedTo = {}
+        self.visited = False
         if symbol == '#':
             self.terminus = True
         else:
@@ -49,6 +52,8 @@ class Graph:
 
     #TODO: Add so it just takes a fromVertex Key and a context, and updates it
     #       in the function instead of multiple function calls in Drone
+    #TODO: Automatically generate neighbors based on coordinates and default populate
+    #       with 'X'
     def addEdge(self, fromVertex, toVertex, symbol):
         if toVertex[0] > self.highestX:
             self.highestX = toVertex[0]
@@ -58,9 +63,11 @@ class Graph:
         # If vertex is none existent, add it
         if fromVertex not in self.vertList:
             newVertex = self.addVertex(fromVertex, 'Z')
+            newVertex.visited = True
         # If it does exist, update it's current value
         else:
             self.vertList[fromVertex].symbol = 'Z'
+            self.vertList[fromVertex].visited = True
         # If vertex is none existent, add it
         if toVertex not in self.vertList:
             newVertex = self.addVertex(toVertex, symbol)
