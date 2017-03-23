@@ -63,19 +63,29 @@ class Drone:
             self.mineralsMined += 1
             return 'WEST'
         else:
-            return False 
-    
-    def follow_instruction(self):
-        instruction = self.instructionQueue.pop(-1)
+            return False
 
-        if instruction == 'NORTH':
-            return 'NORTH'
-        elif instruction == 'SOUTH':
-            return 'SOUTH'
-        elif instruction == 'EAST':
-            return 'EAST'
-        elif instruction == 'WEST':
-            return 'WEST'
+    def add_instruction_set(self, instructionList):
+        self.instructionQueue.insert(0, instructionList)
+        # Flatten list
+        self.instructionQueue = [y for x in self.instructionQueue for y in x]
+    
+    def follow_instruction(self, context):
+        if self.location == self.instructionQueue[0]:
+            self.instructionQueue.pop(0)
+
+        if self.instructionQueue:
+            direction = self.move_to_point(context, self.instructionQueue[0])
+            if direction == 'NORTH':
+                return 'NORTH'
+            elif direction == 'SOUTH':
+                return 'SOUTH'
+            elif direction == 'EAST':
+                return 'EAST'
+            elif direction == 'WEST':
+                return 'WEST'
+            else:
+                return 'CENTER'
         else:
             return 'CENTER'
 
@@ -123,6 +133,10 @@ class Drone:
             if context.west == ' ':
                 return 'WEST'
 
+    def request_route(self, start, finish):
+        self.overlord.generate_route(self, start, finish)
+
+
     def move(self, context):
         self.update_graph(context)
 
@@ -133,7 +147,12 @@ class Drone:
             #print(route)
             #input()
 
-            direction = self.move_to_point(context, self.home)
+            if self.instructionQueue:
+                direction = self.follow_instruction(context)
+            else:
+                self.request_route(self.location, self.home)
+                direction = self.follow_instruction(context)
+
             if direction == 'CENTER':
                 #Calls to Overlord to let it know, it's at deployment area
                 self.overlord.return_zerg(self)
@@ -153,7 +172,7 @@ class Drone:
             return direction
 
         if self.instructionQueue:
-            direction = self.follow_instruction()
+            direction = self.follow_instruction(context)
             if direction:
                 return direction
 
@@ -161,7 +180,6 @@ class Drone:
         if direction:
             return direction
 
-        
         direction = self.random_direction(context)
         if direction and self.returnMode == False:
             return direction
@@ -205,6 +223,13 @@ class Overlord:
 
     def get_graph(self, mapId):
         return self.graphs.get(mapId, None)
+
+    def generate_route(self, drone, location, goal):
+        route = a_star_search(drone.graph, location, goal)
+        drone.add_instruction_set(route)
+        
+            
+        
  
     def action(self):
         if self.ticksLeft < 30 and self.returningDrones == False:
