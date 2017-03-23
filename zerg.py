@@ -4,6 +4,15 @@ from astar import *
 from random import randint, choice
 
 class Drone:
+#ZERG STATE
+#1. Get off deployment Zone
+#2. Mine minerals
+#*3. Follow instructions
+#*3. Trace Map
+#*4. Explore map efficiently
+# 5. Seek unvisited vertexes
+# 6. Return to Deployment zone
+
     tick = 0
     def __init__(self, overlord):
         self.instructionQueue = []
@@ -102,13 +111,6 @@ class Drone:
         self.location = (context.x, context.y)
 
         if self.returnMode == True:
-            if self.foo == False:
-                result = a_star_search(self.overlord.graphs[self.mapId], self.location, self.home)
-                print(self.location, self.home)
-                print(result)
-                input()
-                self.foo == True
-
             direction = self.move_to_home(context)
             if direction == 'CENTER':
                 #Calls to Overlord to let it know, it's at deployment area

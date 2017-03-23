@@ -62,4 +62,12 @@ def a_star_search(graph, start, goal):
                 queue.put(next, priority)
                 came_from[next] = current
 
-    return came_from
+    current = goal 
+    path = [current]
+    while current != start: 
+       current = came_from[current]
+       path.append(current)
+    path.append(start) # optional
+    path.reverse() # optional
+
+    return path
