@@ -93,3 +93,5 @@ def first_unvisited(graph, start):
             if next not in visited:
                 queue.put(next, 0)
                 visited[next] = True
+
+    return None

@@ -35,6 +35,8 @@ class Graph:
         self.highestX = 0
         self.highestY = 0
         self.mapId = mapId
+        self.mineralsMined = 0
+        self.complete = False
 
     def addVertex(self, key, symbol):
         self.numVertices = self.numVertices + 1
@@ -90,6 +92,17 @@ class Graph:
                     formatS = "(%s%s, %s%s)"
                     print( formatS % (v.getId(), v.symbol, w.getId(), w.symbol))
         print()
+
+    def add_minerals(self, count):
+        self.mineralsMined += count
+        self.check_if_complete()
+
+    def check_if_complete(self):
+        if self.mineralsMined >= 45:
+            self.complete = True
+            return True
+        else:
+            return False
 
     def __iter__(self):
         return iter(self.vertList.values())

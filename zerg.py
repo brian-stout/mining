@@ -20,7 +20,7 @@ class Drone:
         self.home = (0, 0)
         self.returnMode = False
         self.hp = 40
-        self.mineralsMined = 0
+        self.minerals = 0
         self.graph = None
         self.wallMode = True
 
@@ -56,7 +56,7 @@ class Drone:
     def find_wall(self, context):
         if self.zergId % 2 == 0:
             if context.west == '#':
-                self.wallMode == False
+                self.wallMode = False
                 return 'CENTER'
             elif context.west in ' _':
                 return 'WEST'
@@ -64,7 +64,7 @@ class Drone:
                 return choice(['NORTH','SOUTH'])
         else:
             if context.east == '#':
-                self.wallMode == False
+                self.wallMode = False
                 return 'CENTER'
             elif context.east in ' _':
                 return 'EAST'
@@ -90,16 +90,20 @@ class Drone:
 
     def focus_minerals(self, context):
         if context.north in '*':
-            self.mineralsMined += 1
+            self.minerals += 1
+            self.graph.mineralsMined += 1
             return 'NORTH'
         elif context.south in '*':
-            self.mineralsMined += 1
+            self.minerals += 1
+            self.graph.mineralsMined += 1
             return 'SOUTH'
         elif context.east in '*':
-            self.mineralsMined += 1
+            self.minerals += 1
+            self.graph.mineralsMined += 1
             return 'EAST'
         elif context.west in '*':
-            self.mineralsMined += 1
+            self.minerals += 1
+            self.graph.mineralsMined += 1
             return 'WEST'
         else:
             return False
@@ -139,7 +143,6 @@ class Drone:
             vertex = self.graph.vertList[instruction]
         else:
             return 'CENTER'
-
 
         if vertex.symbol in '#~':
             self.purge_instruction()
@@ -238,12 +241,6 @@ class Drone:
             if direction:
                 return direction
 
-        """
-        elif self.home[0] == 0 and self.home[1] == 0:
-            self.home = (context.x, context.y)
-            return self.leave_deployment_zone(context)
-        """
-
         direction = self.focus_minerals(context)
         if direction:
             return direction
@@ -281,6 +278,7 @@ class Overlord:
         self.noMoreDeployment = False
 
         nextMap = 0
+
         for number in range(6):
             z = Drone(self)
             self.zergDropList.append(z)
@@ -331,11 +329,19 @@ class Overlord:
         for zerg in self.zerg.items():
             zerg = zerg[1]
             distance = self.determine_distance(zerg.location, zerg.home)
-            if distance > self.ticksLeft - 25:
+            graphSize = 15
+            if zerg.graph:
+                graphSize = zerg.graph.highestX + zerg.graph.highestY
+            if distance > self.ticksLeft - graphSize:
                 self.noMoreDeployment = True
                 zerg.returnMode = True
-            if zerg.mineralsMined >= 10 and zerg.returnMode == False:
+            if zerg.minerals >= 10 and zerg.returnMode == False:
                 zerg.returnMode = True
+            # Have to check for graph first because a drone doesn't have a graph
+            #   Till it's deployed.
+            if zerg.graph:
+                if zerg.graph.check_if_complete():
+                    zerg.returnMode = True
 
     def check_for_wallMode(self):
         for zerg in self.zerg.items():
@@ -343,6 +349,17 @@ class Overlord:
             if zerg.wallMode == True:
                 if self.ticks - self.ticksLeft > 100:
                     zerg.wallMode = False
+
+    def change_map_id(self, zerg):
+        mapList = []
+        for mapId in self.maps:
+            if self.graphs[mapId].complete == False:
+                mapList.append(mapId)
+
+        mapId = choice(mapList)
+        zerg.mapId = mapId
+        zerg.graph = self.graphs[mapId]
+        
 
     def action(self):
         self.ticksLeft -= 1
@@ -359,15 +376,18 @@ class Overlord:
         elif self.zergDropList:
             zerg = self.zergDropList.pop(0)
 
-
             graph = self.graphs.get(zerg.mapId, None)
             if graph:
                 zerg.graph = graph
             else:
                 self.graphs[zerg.mapId] = Graph(zerg.mapId)
                 zerg.graph = self.graphs[zerg.mapId]
-            zerg.mineralsMined = 0
+            zerg.minerals = 0
             zerg.returnMode = False
+
+            if zerg.graph.complete == True:
+                self.change_map_id(zerg)
+
             return 'DEPLOY {} {}'.format((id(zerg)), zerg.mapId)
 
         else:
@@ -375,7 +395,10 @@ class Overlord:
                 return 'RETURN {}'.format(choice(list(self.zerg.keys())))
             else:
                 zergID = choice(list(self.zerg.keys()))
-                return 'DEPLOY {} {}'.format(zergID, self.zerg[zergID].mapId)
+                if self.zerg[zergID].graph.complete == False:
+                    return 'DEPLOY {} {}'.format(zergID, self.zerg[zergID].mapId)
+                else:
+                    return 'PASS'
 
         
 
