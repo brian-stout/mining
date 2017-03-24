@@ -7,11 +7,11 @@ from time import sleep
 import astar
 import graph
 
-TICKS = 300
+TICKS = 1000
 
 c = zerg.Overlord(TICKS)
 
-maps = { n: Map(25, 7) for n in range(3) }
+maps = { n: Map(40, 20) for n in range(3) }
 for n in maps:
     c.add_map(n, maps[n].summary())
 

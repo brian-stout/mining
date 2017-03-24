@@ -58,7 +58,7 @@ class Drone:
             if context.west == '#':
                 self.wallMode == False
                 return 'CENTER'
-            elif context.west == ' ':
+            elif context.west in ' _':
                 return 'WEST'
             elif context.west in '~Z':
                 return choice(['NORTH','SOUTH'])
@@ -66,7 +66,7 @@ class Drone:
             if context.east == '#':
                 self.wallMode == False
                 return 'CENTER'
-            elif context.east == ' ':
+            elif context.east in ' _':
                 return 'EAST'
             elif context.west in '~Z':
                 return choice(['NORTH', 'SOUTH'])
@@ -76,13 +76,13 @@ class Drone:
 
     def random_direction(self, context): 
         new = randint(0, 3)
-        if new == 0 and context.north in ' ':
+        if new == 0 and context.north in ' _':
             return 'NORTH'
-        elif new == 1 and context.south in ' ':
+        elif new == 1 and context.south in ' _':
             return 'SOUTH'
-        elif new == 2 and context.east in ' ':
+        elif new == 2 and context.east in ' _':
             return 'EAST'
-        elif new == 3 and context.west in ' ':
+        elif new == 3 and context.west in ' _':
             return 'WEST'
         else:
             return 'CENTER'
@@ -140,15 +140,14 @@ class Drone:
         else:
             return 'CENTER'
 
-        avoidString = '#~'
-        if self.returnMode == True:
-            avoidString += 'Z'
 
         if vertex.symbol in '#~':
             self.purge_instruction()
-            return 'CENTER'
+            return self.random_direction(context)
 
         if vertex.symbol in 'Z':
+            if self.returnMode == True:
+                self.purge_instruction()
             return self.random_direction(context)
 
         if self.instructionQueue:
@@ -205,7 +204,6 @@ class Drone:
             self.overlord.return_zerg(self)
             #TODO: Make it a Overlord method, when the overlord actually picks
             #       the drone up
-            self.mineralsMined = 0
             return 'CENTER'        
 
         if self.instructionQueue:
@@ -262,7 +260,7 @@ class Drone:
         if self.return_mode == True:
             return self.move_to(context, self.home)
         else:
-            return 'CENTER'
+            return self.random_direction(context)
 
 
 class Overlord:
@@ -272,8 +270,9 @@ class Overlord:
         self.graphs = {}
         self.zergDropList = []
         self.zergReturnList = []
+        self.ticks = ticks
         self.ticksLeft = ticks
-        self.returningDrones = False
+        self.noMoreDeployment = False
 
         nextMap = 0
         for number in range(6):
@@ -322,23 +321,33 @@ class Overlord:
         drone.purge_instruction()
         drone.add_instruction_set(route)
 
-    def check_zerg_distance(self):
+    def check_to_return(self):
         for zerg in self.zerg.items():
             zerg = zerg[1]
-            print("DEBUG: " + str(zerg))
             distance = self.determine_distance(zerg.location, zerg.home)
             if distance > self.ticksLeft - 50:
-                self.returningDrones = True
+                self.noMoreDeployment = True
+                zerg.returnMode = True
+            if zerg.mineralsMined >= 10 and zerg.returnMode == False:
                 zerg.returnMode = True
 
-   
+    def check_for_wallMode(self):
+        for zerg in self.zerg.items():
+            zerg = zerg[1]
+            if zerg.wallMode == True:
+                if self.ticks - self.ticksLeft > 30:
+                    zerg.wallMode = False
+
     def action(self):
         self.ticksLeft -= 1
 
-        self.check_zerg_distance()
+        self.check_for_wallMode()
+        self.check_to_return()
 
         if self.zergReturnList:
             zerg = self.zergReturnList.pop(0)
+            if self.noMoreDeployment == False:
+                self.zergDropList.append(zerg)
             return 'RETURN {}'.format(id(zerg))
 
         elif self.zergDropList:
@@ -349,12 +358,14 @@ class Overlord:
             if graph:
                 zerg.graph = graph
             else:
-                self.graphs[zerg.mapId] = Graph()
+                self.graphs[zerg.mapId] = Graph(zerg.mapId)
                 zerg.graph = self.graphs[zerg.mapId]
+            zerg.mineralsMined = 0
+            zerg.returnMode = False
             return 'DEPLOY {} {}'.format((id(zerg)), zerg.mapId)
 
         else:
-            if self.returningDrones == True:
+            if self.noMoreDeployment == True:
                 return 'RETURN {}'.format(choice(list(self.zerg.keys())))
             else:
                 zergID = choice(list(self.zerg.keys()))

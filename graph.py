@@ -29,11 +29,12 @@ class Vertex:
         return self.connectedTo[neighbor]
 
 class Graph:
-    def __init__(self):
+    def __init__(self, mapId):
         self.vertList = {}
         self.numVertices = 0
         self.highestX = 0
         self.highestY = 0
+        self.mapId = mapId
 
     def addVertex(self, key, symbol):
         self.numVertices = self.numVertices + 1
