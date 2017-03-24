@@ -7,11 +7,11 @@ from time import sleep
 import astar
 import graph
 
-TICKS = 500
+TICKS = 300
 
 c = zerg.Overlord(TICKS)
 
-maps = { n: Map(20, 10) for n in range(3) }
+maps = { n: Map(25, 7) for n in range(3) }
 for n in maps:
     c.add_map(n, maps[n].summary())
 
@@ -56,9 +56,10 @@ for _ in range(TICKS):
         graph = c.get_graph(n)
         if graph:
             print()
-            print(graph)
+            #print(graph)
         print(maps[n], end='\n')
+        print(c.ticksLeft)
     sleep(0.05)
-    print(c.ticksLeft)
+
 
 print(mined)

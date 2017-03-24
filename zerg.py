@@ -278,6 +278,7 @@ class Overlord:
         nextMap = 0
         for number in range(6):
             z = Drone(self)
+            self.zergDropList.append(z)
             self.zerg[id(z)] = z
 
             mapId = nextMap
@@ -285,9 +286,6 @@ class Overlord:
             if nextMap > 2:
                 nextMap = 0
             z.mapId = mapId
-
-        for key in self.zerg:
-            self.zergDropList.append(key)
 
     # Function used to determined the mininum number of changes required to
     #   go from one coordinate to another
@@ -298,11 +296,10 @@ class Overlord:
         self.maps[map_id] = summary
 
     def return_zerg(self, zergObject):
-        zergID = id(zergObject)
-        if zergID in self.zergReturnList:
+        if zergObject in self.zergReturnList:
             pass
         else:
-            self.zergReturnList.append(zergID)
+            self.zergReturnList.append(zergObject)
 
     def get_graph(self, mapId):
         return self.graphs.get(mapId, None)
@@ -330,7 +327,7 @@ class Overlord:
             zerg = zerg[1]
             print("DEBUG: " + str(zerg))
             distance = self.determine_distance(zerg.location, zerg.home)
-            if distance > self.ticksLeft - 30:
+            if distance > self.ticksLeft - 50:
                 self.returningDrones = True
                 zerg.returnMode = True
 
@@ -340,29 +337,28 @@ class Overlord:
 
         self.check_zerg_distance()
 
-        if self.zergReturnList and self.returningDrones == True:
-            zergID = self.zergReturnList.pop(0)
-            return 'RETURN {}'.format(zergID)
+        if self.zergReturnList:
+            zerg = self.zergReturnList.pop(0)
+            return 'RETURN {}'.format(id(zerg))
 
         elif self.zergDropList:
-            zergId = self.zergDropList.pop(0)
-            zerg = self.zerg[zergId]
-            # Creating graph
-            # TODO: Makes get_graph method redundant?
+            zerg = self.zergDropList.pop(0)
+
+
             graph = self.graphs.get(zerg.mapId, None)
             if graph:
-                self.zerg[zerg].graph = graph
+                zerg.graph = graph
             else:
                 self.graphs[zerg.mapId] = Graph()
-                self.zerg[zergId].graph = self.graphs[zerg.mapId]
-            return 'DEPLOY {} {}'.format((zergId), zerg.mapId)
+                zerg.graph = self.graphs[zerg.mapId]
+            return 'DEPLOY {} {}'.format((id(zerg)), zerg.mapId)
 
         else:
             if self.returningDrones == True:
                 return 'RETURN {}'.format(choice(list(self.zerg.keys())))
             else:
-                return 'DEPLOY {} {}'.format(choice(list(self.zerg.keys())),
-                    choice(list(self.maps.keys())))
+                zergID = choice(list(self.zerg.keys()))
+                return 'DEPLOY {} {}'.format(zergID, self.zerg[zergID].mapId)
 
         
 
