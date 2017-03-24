@@ -226,6 +226,10 @@ class Drone:
 
 
     def move(self, context):
+        # The first move we set the home to where the zerg was deployed
+        if self.home[0] == 0 and self.home[1] == 0:
+            self.home = (context.x, context.y)
+
         self.update_graph(context)
         self.location = (context.x, context.y)
 
@@ -234,9 +238,11 @@ class Drone:
             if direction:
                 return direction
 
+        """
         elif self.home[0] == 0 and self.home[1] == 0:
             self.home = (context.x, context.y)
             return self.leave_deployment_zone(context)
+        """
 
         direction = self.focus_minerals(context)
         if direction:
@@ -325,7 +331,7 @@ class Overlord:
         for zerg in self.zerg.items():
             zerg = zerg[1]
             distance = self.determine_distance(zerg.location, zerg.home)
-            if distance > self.ticksLeft - 50:
+            if distance > self.ticksLeft - 25:
                 self.noMoreDeployment = True
                 zerg.returnMode = True
             if zerg.mineralsMined >= 10 and zerg.returnMode == False:
@@ -335,7 +341,7 @@ class Overlord:
         for zerg in self.zerg.items():
             zerg = zerg[1]
             if zerg.wallMode == True:
-                if self.ticks - self.ticksLeft > 30:
+                if self.ticks - self.ticksLeft > 100:
                     zerg.wallMode = False
 
     def action(self):

@@ -74,6 +74,8 @@ class Graph:
             newVertex = self.addVertex(toVertex, symbol)
         else:
             self.vertList[toVertex].symbol = symbol
+            if symbol in '#~':
+                self.vertList[toVertex].visited = True
         # Calls on the fromVertex's addNeight method, and adds the to vertex
         self.vertList[fromVertex].addNeightbor(self.vertList[toVertex])
         #self.vertList[toVertex].addNeightbor(self.vertList[fromVertex])

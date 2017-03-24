@@ -11,7 +11,7 @@ TICKS = 1000
 
 c = zerg.Overlord(TICKS)
 
-maps = { n: Map(40, 20) for n in range(3) }
+maps = { n: Map(20, 10) for n in range(3) }
 for n in maps:
     c.add_map(n, maps[n].summary())
 
@@ -22,6 +22,8 @@ print(zerg_locations)
 mined = 0
 
 for _ in range(TICKS):
+    if mined >= 135:
+        break
     act = c.action()
     print(act)
     if act.startswith('DEPLOY'):
@@ -49,7 +51,7 @@ for _ in range(TICKS):
         pass
 
     #Haubrich's auto player implementation
-    os.system("clear") 
+    #os.system("clear") 
     os.system("clear")
     for n in maps:
         maps[n].tick()
@@ -57,9 +59,9 @@ for _ in range(TICKS):
         if graph:
             print()
             #print(graph)
-        print(maps[n], end='\n')
-        print(c.ticksLeft)
-    sleep(0.05)
+        #print(maps[n], end='\n')
+    print(c.ticksLeft)
+    #sleep(0.05)
 
 
 print(mined)
