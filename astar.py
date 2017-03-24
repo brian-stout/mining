@@ -33,7 +33,7 @@ def heuristic(a, b):
     y2 = b[1]
     return abs(x1 - x2) + abs(y1 - y2)
 
-def a_star_search(graph, start, goal):
+def a_star_search(graph, start, goal, hp):
     
     queue = PriorityQueue()
     queue.put(start, 0)
@@ -54,9 +54,11 @@ def a_star_search(graph, start, goal):
         for next in graph.vertList[current].connectedTo:
             next = next.id
             weight = 1
-            if graph.vertList[current].symbol == '~':
+            if graph.vertList[current].symbol == '~' and hp < 10:
                 weight = 9999
-            if graph.vertList[current].symbol in '#Z':
+            elif graph.vertList[current].symbol == '~':
+                weight = 10
+            elif graph.vertList[current].symbol in '#':
                 weight = 9999
             new_cost = cost_so_far[current] + weight
             if next not in cost_so_far or new_cost < cost_so_far[next]:

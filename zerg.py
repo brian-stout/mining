@@ -2,28 +2,43 @@
 from graph import Vertex, Graph
 from astar import *
 from random import randint, choice
+from maptracker import MapTracker
 
+"""
+    
+"""
 class Drone:
-#ZERG STATE
-#1. Get off deployment Zone
-#2. Mine minerals
-#*3. Follow instructions
-#*3. Trace Map
-#*4. Explore map efficiently
-# 5. Seek unvisited vertexes
-# 6. Return to Deployment zone
+    droneCount = 0
 
-    tick = 0
     def __init__(self, overlord):
         self.instructionQueue = []
+        self.zergId = Drone.droneCount
+        Drone.droneCount += 1
         self.mapId = 0
         self.overlord = overlord
         self.location = (0, 0)
         self.home = (0, 0)
         self.returnMode = False
-        self.HP = 20
+        self.hp = 40
         self.mineralsMined = 0
         self.graph = None
+        self.wallMode = True
+
+
+    def update_graph(self, context):
+        #TODO:  Just pass it the context, and have it create vertexes that have
+        #           not been visisted
+        x = context.x
+        y = context.y
+        # North update
+        self.graph.addEdge((x, y), (x, y+1), context.north )
+        # South update
+        self.graph.addEdge((x, y), (x, y-1), context.south )
+        # East update
+        self.graph.addEdge((x, y), (x+1, y), context.east )
+        # West update
+        self.graph.addEdge((x, y), (x-1, y), context.west )
+
 
     def leave_deployment_zone(self, context):
         if context.north in ' ':
@@ -37,17 +52,41 @@ class Drone:
         else:
             return False
 
-    def move_to_point(self, context, point):
-        if self.location[0] > point[0] and context.west in ' _~*':
-            return 'WEST'
-        elif self.location[0] < point[0] and context.east in ' _~*':
-            return 'EAST'
-        elif self.location[1] > point[1] and context.south in ' _~*':
-            return 'SOUTH'
-        elif self.location[1] < point[1] and context.north in ' _~*':
+
+    def find_wall(self, context):
+        if self.zergId % 2 == 0:
+            if context.west == '#':
+                self.wallMode == False
+                return 'CENTER'
+            elif context.west == ' ':
+                return 'WEST'
+            elif context.west in '~Z':
+                return choice(['NORTH','SOUTH'])
+        else:
+            if context.east == '#':
+                self.wallMode == False
+                return 'CENTER'
+            elif context.east == ' ':
+                return 'EAST'
+            elif context.west in '~Z':
+                return choice(['NORTH', 'SOUTH'])
+
+        return None
+
+
+    def random_direction(self, context): 
+        new = randint(0, 3)
+        if new == 0 and context.north in ' ':
             return 'NORTH'
+        elif new == 1 and context.south in ' ':
+            return 'SOUTH'
+        elif new == 2 and context.east in ' ':
+            return 'EAST'
+        elif new == 3 and context.west in ' ':
+            return 'WEST'
         else:
             return 'CENTER'
+
 
     def focus_minerals(self, context):
         if context.north in '*':
@@ -65,68 +104,76 @@ class Drone:
         else:
             return False
 
+
+    def move_to_point(self, context, point):
+        if self.location[0] > point[0] and context.west in ' _~*':
+            return 'WEST'
+        elif self.location[0] < point[0] and context.east in ' _~*':
+            return 'EAST'
+        elif self.location[1] > point[1] and context.south in ' _~*':
+            return 'SOUTH'
+        elif self.location[1] < point[1] and context.north in ' _~*':
+            return 'NORTH'
+        else:
+            return 'CENTER'
+
+
     def purge_instruction(self):
         self.instructionQueue = []
+
 
     def add_instruction_set(self, instructionList):
         for instruction in reversed(instructionList):
             self.instructionQueue.insert(0, instruction)
-    
+
+
     def follow_instruction(self, context):
-        if self.location == self.instructionQueue[0]:
-            self.instructionQueue.pop(0)
+        if self.instructionQueue:
+            if self.location == self.instructionQueue[0]:
+                self.instructionQueue.pop(0)
+        else:
+            return 'CENTER'
         
         if self.instructionQueue:
             instruction = self.instructionQueue[0]
             vertex = self.graph.vertList[instruction]
         else:
             return 'CENTER'
-        if vertex.symbol in '#~Z':
+
+        avoidString = '#~'
+        if self.returnMode == True:
+            avoidString += 'Z'
+
+        if vertex.symbol in '#~':
             self.purge_instruction()
             return 'CENTER'
+
+        if vertex.symbol in 'Z':
+            return self.random_direction(context)
 
         if self.instructionQueue:
             direction = self.move_to_point(context, instruction)
             if direction == 'NORTH':
+                if context.north == '~':
+                    self.hp -= 3
                 return 'NORTH'
             elif direction == 'SOUTH':
+                if context.south == '~':
+                    self.hp -= 3
                 return 'SOUTH'
             elif direction == 'EAST':
+                if context.east == '~':
+                    self.hp -= 3
                 return 'EAST'
             elif direction == 'WEST':
+                if context.west == '~':
+                    self.hp -= 3
                 return 'WEST'
             else:
                 return 'CENTER'
         else:
             return 'CENTER'
 
-
-    def random_direction(self, context): 
-        new = randint(0, 3)
-        if new == 0 and context.north in ' ':
-            return 'NORTH'
-        elif new == 1 and context.south in ' ':
-            return 'SOUTH'
-        elif new == 2 and context.east in ' ':
-            return 'EAST'
-        elif new == 3 and context.west in ' ':
-            return 'WEST'
-        else:
-            return 'CENTER'
-
-    def update_graph(self, context):
-        #TODO:  Just pass it the context, and have it create vertexes that have
-        #           not been visisted
-        x = context.x
-        y = context.y
-        #North update
-        self.graph.addEdge((x, y), (x, y+1), context.north )
-        #South update
-        self.graph.addEdge((x, y), (x, y-1), context.south )
-        #East update
-        self.graph.addEdge((x, y), (x+1, y), context.east )
-        #West update
-        self.graph.addEdge((x, y), (x-1, y), context.west )
 
     def uncover_neighbor(self, context):
         x = context.x
@@ -144,8 +191,10 @@ class Drone:
             if context.west == ' ':
                 return 'WEST'
 
+
     def request_route(self, start, finish):
         self.overlord.generate_route(self, start, finish)
+
 
     def return_home(self, context):
         #route = a_star_search(self.graph, self.location, self.home)
@@ -167,6 +216,7 @@ class Drone:
 
         return direction
 
+
     def visit_unvisited(self, context):
         if self.instructionQueue:
             direction = self.follow_instruction(context)
@@ -175,10 +225,10 @@ class Drone:
             direction = self.follow_instruction(context)
 
         return direction
-        
+
+
     def move(self, context):
         self.update_graph(context)
-
         self.location = (context.x, context.y)
 
         if self.returnMode == True:
@@ -194,6 +244,13 @@ class Drone:
         if direction:
             return direction
 
+        if self.wallMode == True:
+            direction = self.find_wall(context)
+            if direction:
+                if direction == 'CENTER':
+                    self.wallMode = False
+                return direction
+
         direction = self.uncover_neighbor(context)
         if direction:
             return direction
@@ -202,12 +259,10 @@ class Drone:
         if direction:
             return direction
 
-        direction = self.random_direction(context)
-        if direction and self.returnMode == False:
+        if self.return_mode == True:
+            return self.move_to(context, self.home)
+        else:
             return 'CENTER'
-
-        return 'CENTER'
-
 
 
 class Overlord:
@@ -216,14 +271,20 @@ class Overlord:
         self.zerg = {}
         self.graphs = {}
         self.zergDropList = []
-        self.nextMap = 0
         self.zergReturnList = []
         self.ticksLeft = ticks
         self.returningDrones = False
 
+        nextMap = 0
         for number in range(6):
             z = Drone(self)
             self.zerg[id(z)] = z
+
+            mapId = nextMap
+            nextMap += 1
+            if nextMap > 2:
+                nextMap = 0
+            z.mapId = mapId
 
         for key in self.zerg:
             self.zergDropList.append(key)
@@ -247,48 +308,54 @@ class Overlord:
         return self.graphs.get(mapId, None)
 
     def return_unvisited(self, drone):
+        route = None
+        goal = None
         goal = first_unvisited(drone.graph, drone.location)
-        drone.graph.vertList[goal].visited = True
-        route = a_star_search(drone.graph, drone.location, goal)
+        try:
+            drone.graph.vertList[goal].visited = True
+            route = a_star_search(drone.graph, drone.location, goal, drone.hp)
+        except:
+            pass
         drone.purge_instruction()
-        drone.add_instruction_set(route)
+        if route:
+            drone.add_instruction_set(route)
 
     def generate_route(self, drone, location, goal):
-        route = a_star_search(drone.graph, location, goal)
+        route = a_star_search(drone.graph, location, goal, drone.hp)
         drone.purge_instruction()
         drone.add_instruction_set(route)
 
     def check_zerg_distance(self):
-        pass
+        for zerg in self.zerg.items():
+            zerg = zerg[1]
+            print("DEBUG: " + str(zerg))
+            distance = self.determine_distance(zerg.location, zerg.home)
+            if distance > self.ticksLeft - 30:
+                self.returningDrones = True
+                zerg.returnMode = True
 
+   
     def action(self):
         self.ticksLeft -= 1
 
         self.check_zerg_distance()
-        if self.ticksLeft < 30 and self.returningDrones == False:
-            self.returningDrones = True
-            for zerg in self.zerg.values():
-                zerg.returnMode = True
 
         if self.zergReturnList and self.returningDrones == True:
             zergID = self.zergReturnList.pop(0)
             return 'RETURN {}'.format(zergID)
 
         elif self.zergDropList:
-            zerg = self.zergDropList.pop(0)
-            mapId = self.nextMap
-            self.nextMap += 1
-            if self.nextMap > 2:
-                self.nextMap = 0
-            self.zerg[zerg].mapId = mapId
+            zergId = self.zergDropList.pop(0)
+            zerg = self.zerg[zergId]
             # Creating graph
-            graph = self.graphs.get(mapId, None)
+            # TODO: Makes get_graph method redundant?
+            graph = self.graphs.get(zerg.mapId, None)
             if graph:
                 self.zerg[zerg].graph = graph
             else:
-                self.graphs[mapId] = Graph()
-                self.zerg[zerg].graph = self.graphs[mapId]
-            return 'DEPLOY {} {}'.format((zerg), mapId)
+                self.graphs[zerg.mapId] = Graph()
+                self.zerg[zergId].graph = self.graphs[zerg.mapId]
+            return 'DEPLOY {} {}'.format((zergId), zerg.mapId)
 
         else:
             if self.returningDrones == True:
