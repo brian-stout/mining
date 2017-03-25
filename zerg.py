@@ -83,13 +83,13 @@ class Drone:
         x = context.x
         y = context.y
         # North update
-        self.graph.addEdge((x, y), (x, y+1), context.north)
+        self.graph.add_edge((x, y), (x, y+1), context.north)
         # South update
-        self.graph.addEdge((x, y), (x, y-1), context.south)
+        self.graph.add_edge((x, y), (x, y-1), context.south)
         # East update
-        self.graph.addEdge((x, y), (x+1, y), context.east)
+        self.graph.add_edge((x, y), (x+1, y), context.east)
         # West update
-        self.graph.addEdge((x, y), (x-1, y), context.west)
+        self.graph.add_edge((x, y), (x-1, y), context.west)
 
     """
     method find_wall():
