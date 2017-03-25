@@ -116,8 +116,8 @@ class Graph:
         if self.vertList:
             for v in self:
                 for w in v.get_connections():
-                    formatS = "(%s%s, %s%s)"
-                    print(formatS % (v.get_id(), v.symbol, w.get_id(), w.symbol))
+                    formS = "(%s%s, %s%s)"
+                    print(formS % (v.get_id(), v.symbol, w.get_id(), w.symbol))
         print()
 
     # Method called by drone to add mineral count
@@ -125,6 +125,8 @@ class Graph:
         self.mineralsMined += count
         self.check_if_complete()
 
+    # TODO: Add code to detect the amount of minerals on a map
+    #   based on the map summary and the size of the map
     def check_if_complete(self):
         return self.complete
 

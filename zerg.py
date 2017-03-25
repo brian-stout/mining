@@ -620,7 +620,7 @@ class Overlord:
             # Have to check for graph first because a drone
             #   doesn't have a graph Till it's deployed.
             if zerg.graph:
-                # If the map is fully mined, go ahead and return the zerg
+                # If the map is fully checked, go ahead and return the zerg
                 if zerg.graph.check_if_complete():
                     zerg.returnMode = True
 
