@@ -1,17 +1,9 @@
-#Implementation modified from http://www.redblobgames.com/pathfinding/a-star/implementation.html
+# Implementation modified from
+# http://www.redblobgames.com/pathfinding/a-star/implementation.html
 
-#TODO: http://zurb.com/forrst/posts/A_algorithm_in_python-B4c Use this instead ugh, that code sucks
-
-"""
-class SimpleGraph:
-    def __init__(self):
-        self.edges = {}
-    
-    def neighbors(self, id):
-        return self.edges[id]
-"""
 
 import heapq
+
 
 class PriorityQueue:
     def __init__(self):
@@ -26,6 +18,7 @@ class PriorityQueue:
     def get(self):
         return heapq.heappop(self.elements)[1]
 
+
 def heuristic(a, b):
     x1 = a[0]
     y1 = a[1]
@@ -33,8 +26,9 @@ def heuristic(a, b):
     y2 = b[1]
     return abs(x1 - x2) + abs(y1 - y2)
 
+
 def a_star_search(graph, start, goal, hp):
-    
+
     queue = PriorityQueue()
     queue.put(start, 0)
     came_from = {}
@@ -48,9 +42,8 @@ def a_star_search(graph, start, goal, hp):
         if current == goal:
             break
 
-        #TODO: Automatically generate neighbors so it'll create the straightest path
-        #       If one of the generated neighbors turns out to be an obstacle
-        #       the drone will just call for another path with the new information
+        # TODO: Automatically generate neighbors as we search for to
+        #       create a straighter path
         for next in graph.vertList[current].connectedTo:
             next = next.id
             weight = 1
@@ -67,16 +60,17 @@ def a_star_search(graph, start, goal, hp):
                 queue.put(next, priority)
                 came_from[next] = current
 
-    current = goal 
+    current = goal
     path = [current]
-    while current != start: 
-       current = came_from[current]
-       path.append(current)
-    path.append(start) # optional
-    path.reverse() # optional
+    while current != start:
+        current = came_from[current]
+        path.append(current)
+    path.append(start)
+    path.reverse()
 
     path.pop(0)
     return path
+
 
 def first_unvisited(graph, start):
     queue = PriorityQueue()
@@ -88,7 +82,7 @@ def first_unvisited(graph, start):
         current = queue.get()
         for next in graph.vertList[current].connectedTo:
             next = next.id
-            if graph.vertList[next].visited == False:
+            if graph.vertList[next].visited is False:
                 return next
             if next not in visited:
                 queue.put(next, 0)

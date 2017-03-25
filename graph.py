@@ -1,6 +1,7 @@
-#Code modified from http://interactivepython.org/courselib/static/pythonds/Graphs/Implementation.html
+# Code modified from
+# http://interactivepython.org/courselib/
+# static/pythonds/Graphs/Implementation.html
 
-from astar import *
 
 class Vertex:
     def __init__(self, key, symbol):
@@ -17,16 +18,18 @@ class Vertex:
         self.connectedTo[neighbor] = neighbor.symbol
 
     def __str__(self):
-        return str(self.id) + ' connectedTo: ' + str([x.id for x in self.connectedTo])
+        connectedTo = str([x.id for x in self.connectedTo])
+        return str(self.id + ' connectedTo: ' + connectedTo)
 
     def getConnections(self):
         return self.connectedTo.keys()
-    
+
     def getId(self):
         return self.id
-    
+
     def getWeight(self, neighbor):
         return self.connectedTo[neighbor]
+
 
 class Graph:
     def __init__(self, mapId):
@@ -53,10 +56,11 @@ class Graph:
     def __contains__(self, n):
         return n in self.vertList
 
-    #TODO: Add so it just takes a fromVertex Key and a context, and updates it
+    # TODO: Add so it just takes a fromVertex Key and a context, and updates it
     #       in the function instead of multiple function calls in Drone
-    #TODO: Automatically generate neighbors based on coordinates and default populate
-    #       with 'X'
+    # TODO: Automatically generate neighbors based on coordinates
+    #        and default populate with 'X'
+
     def addEdge(self, fromVertex, toVertex, symbol):
         if toVertex[0] > self.highestX:
             self.highestX = toVertex[0]
@@ -80,7 +84,6 @@ class Graph:
                 self.vertList[toVertex].visited = True
         # Calls on the fromVertex's addNeight method, and adds the to vertex
         self.vertList[fromVertex].addNeightbor(self.vertList[toVertex])
-        #self.vertList[toVertex].addNeightbor(self.vertList[fromVertex])
 
     def getVertices(self):
         return self.vertList.keys()
@@ -90,7 +93,7 @@ class Graph:
             for v in self:
                 for w in v.getConnections():
                     formatS = "(%s%s, %s%s)"
-                    print( formatS % (v.getId(), v.symbol, w.getId(), w.symbol))
+                    print(formatS % (v.getId(), v.symbol, w.getId(), w.symbol))
         print()
 
     def add_minerals(self, count):
@@ -120,7 +123,3 @@ class Graph:
             line += '\n'
             returnString += line
         return returnString
-
-
-                
-        
