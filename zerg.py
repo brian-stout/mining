@@ -79,7 +79,6 @@ class Drone:
         index 0 is the x value
          index 1 is the y value
     """
-
     def update_graph(self, context):
         x = context.x
         y = context.y
@@ -112,7 +111,6 @@ class Drone:
         on.  The overlord will set it to off and the drone
         will run normal operations from it's location
     """
-
     def find_wall(self, context):
         if self.zergId % 2 == 0:
             if context.west == '#':
@@ -143,12 +141,11 @@ class Drone:
         As a last resort the Drone will just try things, and hopefully
             fix itself
     """
-
     def random_direction(self, context):
         new = randint(0, 3)
         if new == 0 and context.north in ' _':
             return 'NORTH'
-        elif new == 1 or and context.south in ' _':
+        elif new == 1 and context.south in ' _':
             return 'SOUTH'
         elif new == 2 and context.east in ' _':
             return 'EAST'
@@ -168,7 +165,6 @@ class Drone:
         focusing on minerals has the top priority, unless the overlord
             is recalling all drones, in which returning to home does
     """
-
     def focus_minerals(self, context):
         if context.north in '*':
             self.minerals += 1
@@ -203,7 +199,6 @@ class Drone:
         closer to the goal point every single time
 
     """
-
     def move_to_point(self, context, point):
         if self.location[0] > point[0] and context.west in ' _~*':
             return 'WEST'
@@ -225,7 +220,6 @@ class Drone:
         or a path is too dangerous to follow. it empty's out the list
         to either grab a new route, or follow basic logic
     """
-
     def purge_instruction(self):
         self.instructionQueue = []
 
@@ -235,7 +229,6 @@ class Drone:
     This method is used by the overlord to assign a set of instructions
         to the drone
     """
-
     def add_instruction_set(self, instructionList):
         for instruction in reversed(instructionList):
             self.instructionQueue.insert(0, instruction)
@@ -256,7 +249,6 @@ class Drone:
         prioritize this one.  This would lead to a drone carving through
         the map as opposed to doing a scanline and improve search times
     """
-
     def uncover_neighbor(self, context):
         x = context.x
         y = context.y
@@ -285,7 +277,6 @@ class Drone:
     When the overlord give a route to the drone it uses this logic
         to follow the orders.
     """
-
     def follow_instruction(self, context):
         # Determines if a drone has succesfully moved to the next
         # coordinate.  If it has it pops that instruction of
@@ -367,7 +358,6 @@ class Drone:
         a route to the specified goal.  This is always the home
         or an unvisited node
     """
-
     def request_route(self, start, finish):
         self.overlord.generate_route(self, start, finish)
 
@@ -381,12 +371,11 @@ class Drone:
     When the drone is at the deployment area, it'll call to the
         overlord that it's ready for a pickup
     """
-
     def return_home(self, context):
         if self.location == self.home:
             # Calls to Overlord to let it know, it's at deployment area
             self.overlord.return_zerg(self)
-            return 'CENTER' # Keeps drone on deployment area
+            return 'CENTER'  # Keeps drone on deployment area
 
         # If drone already has instruction to home
         #   follow them
@@ -411,7 +400,6 @@ class Drone:
 
     Upon requesting the current instruction list is purged
     """
-
     def visit_unvisited(self, context):
         # If there are already instructions follow them
         if self.instructionQueue:
@@ -436,7 +424,6 @@ class Drone:
     It's used by the driver program to move the drone.
 
     """
-
     def move(self, context):
         # The first move we set the home to where the zerg was deployed
         # If home is 0,0 (an impossible coordinate to get to
@@ -494,6 +481,18 @@ class Drone:
         else:
             return self.random_direction(context)
 
+"""
+    class Overlord:
+
+    The overlord class creates an object whose purpose is to
+        handle the heavy logic operations related to the drone
+        path finding, as well as the logic dictating how to use
+        the donres entirely.
+
+    This means that drones can request routes from the overlord, and
+        the overlord handles logic for deploying, and returning drones
+"""
+
 
 class Overlord:
     def __init__(self, ticks):
@@ -507,12 +506,15 @@ class Overlord:
         self.noMoreDeployment = False
 
         nextMap = 0
-
+        # Creates all six drones and adds them to the drop list
         for number in range(6):
             z = Drone(self)
             self.zergDropList.append(z)
             self.zerg[id(z)] = z
 
+            # Assigns a mapId to the zerg
+            # Used to deploy only two zerg to one map
+            #   initially
             mapId = nextMap
             nextMap += 1
             if nextMap > 2:
@@ -524,54 +526,112 @@ class Overlord:
     def determine_distance(self, pair1, pair2):
         return abs(pair1[0] - pair2[0]) + abs(pair1[1] - pair2[1])
 
+    # Provided code
     def add_map(self, map_id, summary):
         self.maps[map_id] = summary
 
+    """
+    method return_zerg():
+
+    This method is called by a drone when it's returning
+        and on the deployment zone.
+
+    It add the drone to the returnList so the overlord
+        will call to return it.
+    """
     def return_zerg(self, zergObject):
         if zergObject in self.zergReturnList:
             pass
         else:
             self.zergReturnList.append(zergObject)
 
-    def get_graph(self, mapId):
-        return self.graphs.get(mapId, None)
+    """
+    method return_unvisited():
 
+    Runs a breadth first search from the drone's location looking
+        for the first unvisited node.
+
+    After it finds the first unvisited node, this function provides a
+        route using A* pathfinding to the zerg.
+    """
     def return_unvisited(self, drone):
         route = None
         goal = None
+        # Grab the coordinates of the nearest unvisited node
         goal = first_unvisited(drone.graph, drone.location)
+        # Try block because somtimes there's weird index errors
         try:
+            # When returned, set it to true so it's not visited again
             drone.graph.vertList[goal].visited = True
+            # Make a route from current location to the unvisited node
             route = a_star_search(drone.graph, drone.location, goal, drone.hp)
         except:
             pass
+        # Purge the instructions
         drone.purge_instruction()
+        # If a route was found, add it to the drone's instruction Queue
         if route:
             drone.add_instruction_set(route)
 
+    """
+    method generate_route():
+
+    This method given a drone, it's location, and an end goal.
+        Will call on the a_star_search to find a route to the goal
+    """
     def generate_route(self, drone, location, goal):
         route = a_star_search(drone.graph, location, goal, drone.hp)
         drone.purge_instruction()
         drone.add_instruction_set(route)
 
+    """
+    method check_to_return():
+
+    This method is run at the start of every overlord action to check
+        if a drone should be returned to the deployment zone
+    """
     def check_to_return(self):
+        # Checking every zerg it's in charge of
         for zerg in self.zerg.items():
+            # Provided code gives a tuple for some reason
+            #   second index is the zerg object
             zerg = zerg[1]
             distance = self.determine_distance(zerg.location, zerg.home)
+            # Default graphSize, it's used as a extra reassurance that
+            #   The drone will have enough ticks to return home
+            # The larger the map the greater the extra room
             graphSize = 15
+
+            # Sometimes the zerg doesn't have graph, so check first
             if zerg.graph:
+                # Determine extra room based on map size
                 graphSize = zerg.graph.highestX + zerg.graph.highestY
+
+            # If the distance is greater than the ticksleft minus the
+            #   extraroom, recall the drone
             if distance > self.ticksLeft - graphSize:
                 self.noMoreDeployment = True
                 zerg.returnMode = True
+            # If a zerg has 10 or more minerals, seek deployment zone
+            #   this is suboptimal, but ensures zerg will still return
+            #   minerals on the off chance it dies
             if zerg.minerals >= 10 and zerg.returnMode is False:
                 zerg.returnMode = True
             # Have to check for graph first because a drone
             #   doesn't have a graph Till it's deployed.
             if zerg.graph:
+                # If the map is fully mined, go ahead and return the zerg
                 if zerg.graph.check_if_complete():
                     zerg.returnMode = True
 
+    """
+    method check_for_wallMode():
+
+    After a certain number of ticks, overlord checks each drone to ensure
+        the drone isn't still trying to find the wall (is probably stuck)
+
+    If it is, it sets it off so the drone can move on with it's life
+    """
     def check_for_wallMode(self):
         for zerg in self.zerg.items():
             zerg = zerg[1]
@@ -579,49 +639,84 @@ class Overlord:
                 if self.ticks - self.ticksLeft > 100:
                     zerg.wallMode = False
 
+    """
+    method change_map_id():
+
+    This method is used to change all relevant data on a drone to
+        move it to another map.
+    """
     def change_map_id(self, zerg):
         mapList = []
+        # Grab all the maps that aren't complete yet
         for mapId in self.maps:
             if self.graphs[mapId].complete is False:
                 mapList.append(mapId)
+        # If there was a found map, grab it
         if mapList:
-            mapId = choice(mapList)
-            zerg.mapId = mapId
-            zerg.graph = self.graphs[mapId]
+            mapId = choice(mapList)  # random pick
+            zerg.mapId = mapId  # Change the mapId to the new one
+            # Sets the home to 0,0 so the drone gets the right home coordinates
+            #   next time it's deployed
             zerg.home = (0, 0)
 
+    """
+    method action():
+
+    The main method for the overlord object.  This method is called
+        by the driver program to simulate a tick
+
+    It handles how the overlord chooses to deploy and return zergs
+    """
     def action(self):
         self.ticksLeft -= 1
 
         self.check_for_wallMode()
         self.check_to_return()
 
+        # Checks if there's zerg waiting to be returned
         if self.zergReturnList:
+            # Adds them to the deployment list so they can
+            #   be redeployed to same map or another one
             zerg = self.zergReturnList.pop(0)
+            # Prevents drones from being redeployed if ticks
+            #   are super low
             if self.noMoreDeployment is False:
                 self.zergDropList.append(zerg)
+            # Returns a string that the driver program uses
             return 'RETURN {}'.format(id(zerg))
 
+        # Checks if there's zergs waiting to be deployed
         elif self.zergDropList:
             zerg = self.zergDropList.pop(0)
 
+            # Attempts to get a graph from the appropiate map
             graph = self.graphs.get(zerg.mapId, None)
             if graph:
                 zerg.graph = graph
+            # If it can't one needs to be made
             else:
                 self.graphs[zerg.mapId] = Graph(zerg.mapId)
                 zerg.graph = self.graphs[zerg.mapId]
+            # After being deployed reset minerals
             zerg.minerals = 0
+            # Make sure the returnMode is false to avoid
+            #   It just trying to go back to the deployment zone
             zerg.returnMode = False
 
+            # If a zerg's current map is complete, find a new one
             if zerg.graph.complete is True:
                 self.change_map_id(zerg)
 
             return 'DEPLOY {} {}'.format((id(zerg)), zerg.mapId)
 
+        # The default options in case things go wrong
         else:
+            # If all drones have been asked to recall
+            #   only attempt to return random zerg Ids
             if self.noMoreDeployment is True:
                 return 'RETURN {}'.format(choice(list(self.zerg.keys())))
+            # Attempt to deploy a random zerg, in case the initial deployment
+            #   failed.
             else:
                 zergId = choice(list(self.zerg.keys()))
                 if self.zerg[zergId].graph.complete is False:
