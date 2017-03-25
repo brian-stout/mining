@@ -11,8 +11,8 @@ from random import randint, choice
         given a set of rules.  Which direction it goes is based on several
         methods that govern the logic the drone uses.  These methods are
         ordered by priority so that the method determines if the scenario is
-        applicable or not.  If it is it will determine a direction, if
-        it is not it won't return one and the Drone will move
+        applicable or not.  If it is, it will determine a direction.  If
+        it is not, it won't return one and the Drone will move
         on to the next method.
 
     The main method in the drone class is the move method, which contains
@@ -20,8 +20,8 @@ from random import randint, choice
 
     The priority list is:
             1. Set home
-            2. update_graph
-            3. update the location
+            2. update_graph (always done)
+            3. update the location (always done)
             4. mine nearby minerals
                 a. Will not do if the overlord
                     is recalling all the drones
@@ -71,7 +71,7 @@ class Drone:
     """
     method update_graph():
 
-    When called the drone will use the context it received
+    When called the drone will send the context it received
         to it's graph which will use the information to create
         connections.
 
@@ -106,9 +106,9 @@ class Drone:
         or an acid pool, it will randomly choose up or down
         to avoid it.
 
-    Some situations the drone will still get stuck on
-        if after a certain amount of ticks, wallMode is still
-        on.  The overlord will set it to off and the drone
+    Some situations the drone will still get stuck.
+        If after a certain amount of ticks, wallMode is still
+        on, the overlord will set it to off and the drone
         will run normal operations from it's location
     """
     def find_wall(self, context):
@@ -163,12 +163,12 @@ class Drone:
             will be called.
 
         focusing on minerals has the top priority, unless the overlord
-            is recalling all drones, in which returning to home does
+            is recalling all drones, then returning to home does
     """
     def focus_minerals(self, context):
         if context.north in '*':
             self.minerals += 1
-            # Used by graph to determine when the max minerals are
+            # Used by graph to determine when all the minerals are
             # collected
             self.graph.mineralsMined += 1
             return 'NORTH'
@@ -217,7 +217,7 @@ class Drone:
     This method simply sets the instructionQueue to an empty list.
 
     When the drone determines that a goal is impossible to get to
-        or a path is too dangerous to follow. it empty's out the list
+        or a path is too dangerous to follow, it empty's out the list
         to either grab a new route, or follow basic logic
     """
     def purge_instruction(self):
@@ -240,7 +240,7 @@ class Drone:
         If it hasn't then it explores it, since map exploration has
         a high priority in our goals.
 
-    The main purpose of method is because the logic to check a neighbor
+    The main use of the method is because the logic to check a neighbor
         is much simpler than the logic to do a graph search for a
         unvisited node.
 
@@ -279,7 +279,7 @@ class Drone:
     """
     def follow_instruction(self, context):
         # Determines if a drone has succesfully moved to the next
-        # coordinate.  If it has it pops that instruction of
+        # coordinate.  If it has, it pops that instruction of
         if self.instructionQueue:
             if self.location == self.instructionQueue[0]:
                 self.instructionQueue.pop(0)
@@ -297,7 +297,7 @@ class Drone:
 
             # Extra check because there's been errors
             #   if it fails to grab, return no direction and purge
-            #   since the data is bad some how
+            #   since the data is bad somehow
             if vertex is None:
                 self.purge_instruction()
                 return None
@@ -377,7 +377,7 @@ class Drone:
             self.overlord.return_zerg(self)
             return 'CENTER'  # Keeps drone on deployment area
 
-        # If drone already has instruction to home
+        # If drone already has instructions to home
         #   follow them
         # When a drone is first set to return mode, it purges
         #   it's current instructionQueue
@@ -426,7 +426,7 @@ class Drone:
     """
     def move(self, context):
         # The first move we set the home to where the zerg was deployed
-        # If home is 0,0 (an impossible coordinate to get to
+        # If home is 0,0 (an impossible coordinate to get to,)
         #   then the first context location we get is set to the home
         #   before the drone can move
         if self.home[0] == 0 and self.home[1] == 0:
@@ -487,10 +487,10 @@ class Drone:
     The overlord class creates an object whose purpose is to
         handle the heavy logic operations related to the drone
         path finding, as well as the logic dictating how to use
-        the donres entirely.
+        the drones entirely.
 
     This means that drones can request routes from the overlord, and
-        the overlord handles logic for deploying, and returning drones
+        the overlord handles logic for deploying and returning drones
 """
 
 
@@ -521,7 +521,7 @@ class Overlord:
                 nextMap = 0
             z.mapId = mapId
 
-    # Function used to determined the mininum number of changes required to
+    # Function used to determined the mininum number of moves required to
     #   go from one coordinate to another
     def determine_distance(self, pair1, pair2):
         return abs(pair1[0] - pair2[0]) + abs(pair1[1] - pair2[1])
@@ -576,8 +576,8 @@ class Overlord:
     """
     method generate_route():
 
-    This method given a drone, it's location, and an end goal.
-        Will call on the a_star_search to find a route to the goal
+    This method given a drone, it's location, and an end goal,
+        will call on the a_star_search to find a route to the goal
     """
     def generate_route(self, drone, location, goal):
         route = a_star_search(drone.graph, location, goal, drone.hp)
@@ -627,10 +627,10 @@ class Overlord:
     """
     method check_for_wallMode():
 
-    After a certain number of ticks, overlord checks each drone to ensure
-        the drone isn't still trying to find the wall (is probably stuck)
+    After a certain number of ticks, overlord checks each drone to make
+        sure the drone isn't still trying to find the wall (is probably stuck)
 
-    If it is, it sets it off so the drone can move on with it's life
+    If it is, it sets it to off so the drone can move on with it's life
     """
     def check_for_wallMode(self):
         for zerg in self.zerg.items():

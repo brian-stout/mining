@@ -6,10 +6,11 @@
     class Vertex:
 
     The vertex object is based on a location.  The key is a tuple of
-        and x and a y.
+        a x and a y.
 
-    The vertex object also contains a dictionary (the key's are also a tuple)
-        as well as the symbol at the coordinate
+    The vertex object also contains a dictionary of
+        of neighboring vertexes (the key's are also a tuple)
+        as well as the symbol of the neighbor if it's known
 """
 
 
@@ -41,7 +42,7 @@ class Vertex:
     class Graph:
 
     The graph class creates an object that tracks all the vertexes
-        that have been discovered by a drone for a specific, and how it
+        that have been discovered by a drone for a specific map and how it
         it connects to other vertexes using vertex class objects
 """
 
@@ -120,7 +121,7 @@ class Graph:
                     print(formS % (v.get_id(), v.symbol, w.get_id(), w.symbol))
         print()
 
-    # Method called by drone to add mineral count
+    # Method called by drone to add to the mineral count of a graph
     def add_minerals(self, count):
         self.mineralsMined += count
         self.check_if_complete()
@@ -133,8 +134,10 @@ class Graph:
     def __iter__(self):
         return iter(self.vertList.values())
 
-    # Method used to print a physical representation of the map
-    #   any vertex called that does not provide back symbol data
+    # Method used to print a physical representation of the map when
+    #   the graph is printed.
+    #
+    # Any vertex called that does not provide back symbol data
     #   defaults to an 'X' as an unexplored area
     def __str__(self):
         returnString = ''

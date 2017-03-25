@@ -43,7 +43,7 @@ def heuristic(a, b):
     function a_star_search():
 
     This function is responsible for finding the shortest path
-        between two points and returning the route to them
+        between two points and returning the resulting route
 """
 
 
@@ -92,12 +92,12 @@ def a_star_search(graph, start, goal, hp):
     current = goal
     path = [current]
 
-    # Goes through the data piecing together the route taken for
+    # Goes through the data piecing together the route
     while current != start:
         current = came_from[current]
         path.append(current)
     path.append(start)
-    # reverses it so the drone can pop the initial path
+    # reverses it so index 0 is the start and the last index is the end
     path.reverse()
 
     # Pop the first value since it'll be a duplicate of the start
@@ -109,6 +109,10 @@ def a_star_search(graph, start, goal, hp):
 
     Performs a breadth first search from the starting point and returns
         the first unvisited vertex it finds
+
+    This function also determines if a map has been fully explored
+        If this function does not return an unvisited vertex when requested,
+        there has been no vertex which as not been explored
 """
 
 
@@ -118,7 +122,7 @@ def first_unvisited(graph, start):
     queue = PriorityQueue()
     queue.put(start, 0)
 
-    # Keep track of vertexes we've seen to avoid loop
+    # Keep track of vertexes we've seen to avoid a loop
     visited = {}
 
     # Ignores the node we start from
