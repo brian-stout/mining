@@ -658,6 +658,8 @@ class Overlord:
             # Sets the home to 0,0 so the drone gets the right home coordinates
             #   next time it's deployed
             zerg.home = (0, 0)
+        else:
+            self.noMoreDeployment = True
 
     """
     method action():
